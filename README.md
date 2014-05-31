@@ -125,3 +125,11 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 		return "<span style='color:red'>You're missing out on important updates because your license key is missing, invalid, or expired.</span>";
 	}
 ```
+
+# Changelog
+
+## Version 0.2
+- Added url parameter to API requests for more reliable handling. 
+
+## Version 0.1
+- Initial release. 

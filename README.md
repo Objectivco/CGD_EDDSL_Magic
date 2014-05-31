@@ -17,47 +17,49 @@ For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I h
 The fastest way to understand implementation of `CGD_EDDSL_Magic` is to look at our example plugin in `examples/awesome-plugin`.  It shows a basic installation.
 
 Here are the typical steps:
-1. Copy or clone CGD_EDDSL_Magic into your plugin project.  Put it in a lib or inc folder.
-2. At the top of your main plugin file, or wherever you do your includes, add some code like:
-
-	```php
-	if( !class_exists( 'CGD_EDDSL_Magic' ) ) {
-		// load our custom updater
-		include( dirname( __FILE__ ) . '/lib/CGD_EDDSL_Magic/CGD_EDDSL_Magic.php' );
-	}
-	```
-3. In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`. 
+1) Copy or clone CGD_EDDSL_Magic into your plugin project.  Put it in a lib or inc folder.
+2)  At the top of your main plugin file, or wherever you do your includes, add some code like:
 
 ```php
-	$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author);
+if( !class_exists( 'CGD_EDDSL_Magic' ) ) {
+	// load our custom updater
+	include( dirname( __FILE__ ) . '/lib/CGD_EDDSL_Magic/CGD_EDDSL_Magic.php' );
+}
 ```
-The parameters:
-### $prefix
+
+3) In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`. 
+
+```php
+$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author);
+```
+	
+## The parameters:
+#### $prefix
 This is a unique prefix for your instance.  It's used for saving settings and hooking up various behaviors.  Keep it short, and no spaces or weird symbols or other funny business.  Example: myplugin
 
-### $menu_slug
+#### $menu_slug
 Assuming your plugin has a menu page, you would set the slug of that menu here so that `CGD_EDDSL_Magic` can add a submenu called "License" to this menu.  If you'd rather control this yourself, set to `false`. 
 
-### $host_url
+#### $host_url
 The URL of the site that hosts your plugins. 
 
-### $plugin_version
+#### $plugin_version
 The version of the plugin.
 
-### $plugin_name
+#### $plugin_name
 The name of the plugin as setup in EDD.
 
-### $plugin_author
+#### $plugin_author
 The author of the plugin.
 
 If you're using a class, it's probably a good idea to set a class variable called `updater` and then assign the new `CGD_EDDSL_Magic` instance to that. It will make it easier to access later.
 
-4. In a basic setup, you're done at this point.  Your plugin will now have a fully functioning license settings page, added to whatever your parent menu is.  For more advanced options, continue below.
+**In a basic setup, you're done at this point.  Your plugin will now have a fully functioning license settings page, added to whatever your parent menu is.  For more advanced options, continue below.**
 
 
-## Advanced Implementation
+# Advanced Implementation
 
-### Controlling where the licensing page
+## Controlling where the licensing page
 If you would like to control where the license settings page is, that's actually really easy to do too. 
 
 Just set `$menu_slug` to false in your instantation, and then drop this line in your admin page, wherever you prefer:
@@ -69,22 +71,22 @@ Obviously, the exact syntax will vary depending on how you implement it.  This i
 **One important note: Do not place this line in another HTML form.  It will screw things up. Browsers hate nested forms. (and HTML standards do not permit them)
 **
 
-### Cronning license checks
+## Cronning license checks
 If you want it,  `CGD_EDDSL_Magic` includes a way to force regular license checks.  To do this, you'd add the following code to your activation or deactivation hooks:
 
-#### Activation hook
+### Activation hook
 ``` php
 $this->updater->set_license_check_cron();
 ```
 
-#### Deactivation hook
+### Deactivation hook
 ``` php
 $this->updater->unset_license_check_cron();
 ```
 
 This will create daily checks that keep your key_status variable up-to-date. 
 
-## Really Advanced Implementation
+# Really Advanced Implementation
 
 If this does not satisfy you, and you want to add some type of nag to the plugin listing on the plugins page in WP admin, here's a quick example of how you might do that.  This is just a starting point, so you'll have to parse through it to figure out how it works. 
 

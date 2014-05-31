@@ -71,8 +71,7 @@ $updater->admin_page();
 ```
 Obviously, the exact syntax will vary depending on how you implement it.  This is one reason I find it easier to set the updater instance as a class variable. 
 
-**One important note: Do not place this line in another HTML form.  It will screw things up. Browsers hate nested forms. (and HTML standards do not permit them)
-**
+**One important note: Do not place this line in another HTML form.  It will screw things up. Browsers hate nested forms. (and HTML standards do not permit them)**
 
 ## Cronning license checks
 If you want it,  `CGD_EDDSL_Magic` includes a way to force regular license checks.  To do this, you'd add the following code to your activation or deactivation hooks:

@@ -16,9 +16,12 @@ For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I h
 
 The fastest way to understand implementation of `CGD_EDDSL_Magic` is to look at our example plugin in `examples/awesome-plugin`.  It shows a basic installation.
 
-Here are the typical steps:
+## Here are the typical steps:
+
 1) Copy or clone CGD_EDDSL_Magic into your plugin project.  Put it in a lib or inc folder.
+
 2)  At the top of your main plugin file, or wherever you do your includes, add some code like:
+
 
 ```php
 if( !class_exists( 'CGD_EDDSL_Magic' ) ) {

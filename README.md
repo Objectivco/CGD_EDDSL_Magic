@@ -10,7 +10,7 @@ Once you have it setup, it can be a major pain in the tucus to manage across you
 
 For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I have to update 8 plugins that have 8 slightly different implementations.  It's a major headache. 
 
-`CGD_EDDSL_Magic` fixes all of this.  With as little as a single line of code, you can add an licensing settings page to your plugin.  
+`CGD_EDDSL_Magic` fixes all of this.  With as little as a single line of code, you can add a fully functioning licensing settings page to your plugin.  
 
 # How do I magic?
 

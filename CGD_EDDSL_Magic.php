@@ -10,7 +10,7 @@ if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.1
+ * @version 0.2
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -276,7 +276,8 @@ class CGD_EDDSL_Magic {
 		$api_params = array(
 			'edd_action'=> $action,
 			'license' 	=> $this->get_field_value('license_key'),
-			'item_name' => urlencode( $this->name ) // the name of our product in EDD
+			'item_name' => urlencode( $this->name ), // the name of our product in EDD
+			'url'		=> home_url()
 		);
 
 		// Call the custom API.
@@ -332,9 +333,10 @@ class CGD_EDDSL_Magic {
 		if ( empty($license) ) return;
 
 		$api_params = array(
-			'edd_action' => 'check_license',
-			'license' => $license,
-			'item_name' => urlencode( $this->name )
+			'edd_action'	=> 'check_license',
+			'license' 		=> $license,
+			'item_name' 	=> urlencode( $this->name ),
+			'url'			=> home_url()
 		);
 
 		// Call the custom API.

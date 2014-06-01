@@ -62,8 +62,8 @@ If you're using a class, it's probably a good idea to set a class variable calle
 
 # Advanced Implementation
 
-## Controlling where the licensing page
-If you would like to control where the license settings page is, that's actually really easy to do too. 
+## Controlling the licensing settings page 
+By default, a menu item called "License" is added to the parent menu of your choice. If you would like to have full control of where the license settings page is, that's actually really easy to do too. 
 
 Just set `$menu_slug` to false in your instantation, and then drop this line in your admin page, wherever you prefer:
 ``` php

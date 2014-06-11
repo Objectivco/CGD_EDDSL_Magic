@@ -10,7 +10,7 @@ if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.2.1
+ * @version 0.2.2
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -198,7 +198,7 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function admin_menu() {
-		add_submenu_page( $this->menu_slug, "{$this->name} License Settings", "License", "manage_options", $this-prefix . "menu", array($this, "admin_page") );
+		add_submenu_page( $this->menu_slug, "{$this->name} License Settings", "License", "manage_options", $this->prefix . "menu", array($this, "admin_page") );
 	}
 	
 	/**

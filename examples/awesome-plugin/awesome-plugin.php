@@ -21,7 +21,7 @@ class AwesomePlugin {
 		add_action('admin_menu', array($this, 'menu') );
 		
 		// Instantiate Updater
-		$this->updater = new CGD_EDDSL_Magic("awesome", "awesome-plugin", 'http://cgd.io', '1.0.0', 'Awesome Plugin', 'CGD Inc.');
+		$this->updater = new CGD_EDDSL_Magic("awesome", "awesome-plugin", 'http://cgd.io', '1.0.0', 'Awesome Plugin', 'CGD Inc.', __FILE__);
 	}
 
 	function menu () {	

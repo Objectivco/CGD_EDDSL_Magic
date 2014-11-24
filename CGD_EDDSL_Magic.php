@@ -10,7 +10,7 @@ if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.2.2
+ * @version 0.2.3
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -24,6 +24,7 @@ class CGD_EDDSL_Magic {
 	var $key_statuses; // store list of key statuses and messages
 	var $activate_errors; // store list of activation errors and error messages
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
+	var $plugin_file; // we need to pass this in so it maps to WP
 	
 	/**
 	 * Constructor
@@ -37,23 +38,30 @@ class CGD_EDDSL_Magic {
 	 * @param string $author The author of the plugin.
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false ) {
 		if ( $prefix === false ) {
 			error_log('CGD_EDDSL_Magic: No prefix specified. Aborting.');
 			return;
 		} 
 		
 		if ( $url === false || $version === false || $name == false ) {
-			error_log('CGD_EDDSL_Magic: url, version, or name parameter was false. Aborting.');
+			error_log('CGD_EDDSL_Magic: url, version, plugin file, or name parameter was false. Aborting.');
 			return;
 		} 
 		
+		// Try to figure out plugin file if not provided
+		if ( $plugin_file === false ) {
+			$bt = debug_backtrace();
+			$plugin_file = $bt[0]['file'];
+		}
+				
 		$this->url = $url;
 		$this->version = $version;
 		$this->name = $name;
 		$this->author = $author;
 		$this->menu_slug = $menu_slug;		
 		$this->prefix = $prefix . "_";
+		$this->plugin_file = $plugin_file;
 		
 		$this->key_statuses = array(
 			'invalid' => 'The entered license key is not valid.',
@@ -69,11 +77,11 @@ class CGD_EDDSL_Magic {
 			'revoked' => 'The provided license key has been revoked. Please contact support.',
 			'no_activations_left' => 'This license key has been activated the maximum number of times.',
 			'expired' => 'This license key has expired.',
-			'key_mismatch' => 'An uknown error has occurred: key_mismatch'
+			'key_mismatch' => 'An unknown error has occurred: key_mismatch'
 		);
 		
 		// Instantiate EDD_SL_Plugin_Updater
-		add_action( 'admin_init', array($this, 'updater_init') );
+		add_action( 'admin_init', array($this, 'updater_init'), 0 ); // run first
 		
 		// Add License settings page to menu
 		if ( $this->menu_slug !== false )
@@ -182,7 +190,7 @@ class CGD_EDDSL_Magic {
 		$license_key = trim( $this->get_field_value('license_key') );
 
 		// setup the updater
-		$edd_updater = new EDD_SL_Plugin_Updater( $this->url, __FILE__, array(
+		$edd_updater = new EDD_SL_Plugin_Updater( $this->url, $this->plugin_file, array(
 				'version' 	=> $this->version, 				// current version number
 				'license' 	=> $license_key, 		// license key (used get_option above to retrieve from DB)
 				'item_name' => $this->name, 	// name of this plugin

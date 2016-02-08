@@ -4,7 +4,7 @@ if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
 }
 
-if( !class_exists( 'EDD_SL_Theme_Updater' ) ) {
+if( ! class_exists( 'EDD_SL_Theme_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Theme_Updater.php' );
 }
 
@@ -14,7 +14,7 @@ if( !class_exists( 'EDD_SL_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.2.3
+ * @version 0.3.0
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -67,6 +67,7 @@ class CGD_EDDSL_Magic {
 		$this->menu_slug = $menu_slug;
 		$this->prefix = $prefix . "_";
 		$this->plugin_file = $plugin_file;
+		$this->theme = $theme;
 
 		$this->key_statuses = array(
 			'invalid' => 'The entered license key is not valid.',
@@ -206,7 +207,7 @@ class CGD_EDDSL_Magic {
 			);
 		} else {
 			// setup the updater
-			$edd_updater = new EDD_SL_Theme_Updater( array(
+			$edd_updater = new EDD_Theme_Updater( array(
 					'remote_api_url' => $this->url,
 					'version' 	     => $this->version,  // current version number
 					'license' 	     => $license_key,    // license key (used get_option above to retrieve from DB)

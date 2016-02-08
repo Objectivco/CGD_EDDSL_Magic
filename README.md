@@ -33,7 +33,7 @@ if( !class_exists( 'CGD_EDDSL_Magic' ) ) {
 3) In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`. 
 
 ```php
-$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author, $plugin_file);
+$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author, $plugin_file, $theme = false);
 ```
 
 **Note: The last parameter, `$plugin_file` is technically optional, but it's better to pass it in. This should be the main file for your plugin, the one with the plugin header. If you're in the main plugin file, use `__FILE__`, otherwise, define it as a constant in your main plugin file and pass it in when you instantiate the class.**
@@ -57,9 +57,19 @@ The name of the plugin as setup in EDD.
 #### $plugin_author
 The author of the plugin.
 
+#### $plugin_file
+The main plugin file. 
+
+#### $theme
+Set to true for theme updates. 
+
 If you're using a class, it's probably a good idea to set a class variable called `updater` and then assign the new `CGD_EDDSL_Magic` instance to that. It will make it easier to access later.
 
 **In a basic setup, you're done at this point.  Your plugin will now have a fully functioning license settings page, added to whatever your parent menu is.  For more advanced options, continue below.**
+
+# What about updating themes?
+
+If your project is a theme, you simply need to set the `$theme` parameter above to true. This makes the `$plugin_file` parameter uneccessary, so you can simply set this parameter to `false`. Either way, it will not be used. 
 
 
 # Advanced Implementation
@@ -128,6 +138,9 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 ```
 
 # Changelog
+
+## Version 0.3
+- Added theme update support!
 
 ## Version 0.2
 - Added url parameter to API requests for more reliable handling. 

@@ -67,7 +67,7 @@ If you're using a class, it's probably a good idea to set a class variable calle
 
 **In a basic setup, you're done at this point.  Your plugin will now have a fully functioning license settings page, added to whatever your parent menu is.  For more advanced options, continue below.**
 
-# What about updating themes?
+## What about updating themes?
 
 If your project is a theme, you simply need to set the `$theme` parameter above to true. This makes the `$plugin_file` parameter uneccessary, so you can simply set this parameter to `false`. Either way, it will not be used. 
 

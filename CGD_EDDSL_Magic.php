@@ -4,6 +4,10 @@ if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
 }
 
+if( !class_exists( 'EDD_SL_Theme_Updater' ) ) {
+	include( dirname( __FILE__ ) . '/lib/EDD_SL_Theme_Updater.php' );
+}
+
 /**
  * EDD Software Licensing Magic
  *
@@ -25,10 +29,11 @@ class CGD_EDDSL_Magic {
 	var $activate_errors; // store list of activation errors and error messages
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
 	var $plugin_file; // we need to pass this in so it maps to WP
-	
+	var $theme = false; // do we have a theme or a plugin?
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @access public
 	 * @param string $prefix A prefix that keeps your setting separate for this instance. Short and no spaces. (default: false)
 	 * @param string $menu_slug The menu slug of the parent menu you want to attach the License submenu item to. Same syntax as add_submenu_page()  (default: false)
@@ -38,31 +43,31 @@ class CGD_EDDSL_Magic {
 	 * @param string $author The author of the plugin.
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false ) {
 		if ( $prefix === false ) {
 			error_log('CGD_EDDSL_Magic: No prefix specified. Aborting.');
 			return;
-		} 
-		
+		}
+
 		if ( $url === false || $version === false || $name == false ) {
 			error_log('CGD_EDDSL_Magic: url, version, plugin file, or name parameter was false. Aborting.');
 			return;
-		} 
-		
+		}
+
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {
 			$bt = debug_backtrace();
 			$plugin_file = $bt[0]['file'];
 		}
-				
+
 		$this->url = $url;
 		$this->version = $version;
 		$this->name = $name;
 		$this->author = $author;
-		$this->menu_slug = $menu_slug;		
+		$this->menu_slug = $menu_slug;
 		$this->prefix = $prefix . "_";
 		$this->plugin_file = $plugin_file;
-		
+
 		$this->key_statuses = array(
 			'invalid' => 'The entered license key is not valid.',
 			'expired' => 'Your key has expired and needs to be renewed.',
@@ -71,7 +76,7 @@ class CGD_EDDSL_Magic {
 			'site_inactive' => 'Your license key is valid, but not active for this site.',
 			'valid' => 'Your license key is valid and active for this site.'
 		);
-		
+
 		$this->activate_errors = array(
 			'missing' => 'The provided license key does not seem to exist.',
 			'revoked' => 'The provided license key has been revoked. Please contact support.',
@@ -79,38 +84,38 @@ class CGD_EDDSL_Magic {
 			'expired' => 'This license key has expired.',
 			'key_mismatch' => 'An unknown error has occurred: key_mismatch'
 		);
-		
+
 		// Instantiate EDD_SL_Plugin_Updater
 		add_action( 'admin_init', array($this, 'updater_init'), 0 ); // run first
-		
+
 		// Add License settings page to menu
 		if ( $this->menu_slug !== false )
 			add_action('admin_menu', array($this,'admin_menu'), 11);
-		
+
 		// Form Handler
 		add_action('admin_init', array($this, 'save_settings') );
-		
+
 		// Cron action
 		add_action($this->prefix . '_check_license', array($this, 'check_license') );
-		
+
 	}
-	
+
 	// Form Saving Stuff
-	
+
 	/**
-	 * the_nonce 
+	 * the_nonce
 	 * Creates a nonce for the license page form.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
 	public function the_nonce() {
 		wp_nonce_field( "save_{$this->prefix}_mb_settings", "{$this->prefix}_mb_save" );
 	}
-	
+
 	/**
-	 * get_field_name 
-	 * Generates a field name from a setting value for the license page form. 
+	 * get_field_name
+	 * Generates a field name from a setting value for the license page form.
 	 *
 	 * @access public
 	 * @param string $setting The key for the setting you're saving.
@@ -119,11 +124,11 @@ class CGD_EDDSL_Magic {
 	public function get_field_name ( $setting ) {
 		return "{$this->prefix}_mb_setting[$setting]";
 	}
-	
+
 	/**
 	 * get_field_value
 	 * Retrieves value from the database for specified setting.
-	 * 
+	 *
 	 * @access public
 	 * @param string $setting The setting key you're retrieving (default: false)
 	 * @return void
@@ -135,9 +140,9 @@ class CGD_EDDSL_Magic {
 
 		return $value;
 	}
-	
+
 	/**
-	 * set_field_value 
+	 * set_field_value
 	 * Set value for the specified setting.
 	 *
 	 * @access public
@@ -145,16 +150,16 @@ class CGD_EDDSL_Magic {
 	 * @param mixed $value
 	 * @return void
 	 */
-	public function set_field_value ( $setting = false, $value ) { 
+	public function set_field_value ( $setting = false, $value ) {
 		if ( $setting === false ) return false;
 
-		$value = update_option($this->prefix . "_" . $setting, $value); 
+		$value = update_option($this->prefix . "_" . $setting, $value);
 	}
-	
+
 	/**
 	 * save_settings
 	 * Save license settings.  Listens for settings form submit. Also handles activation / deactivation.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -165,22 +170,22 @@ class CGD_EDDSL_Magic {
 			foreach($settings as $setting => $value) {
 				$this->set_field_value($setting, $value);
 			}
-			
+
 			// Handle activation if applicable
 			if ( isset($_REQUEST['activate_key']) || isset($_REQUEST['deactivate_key']) ) {
 				$this->manage_license_activation();
 			} else {
 				$this->check_license();
 			}
-			
+
 			add_action( 'admin_notices', array($this, 'notice_settings_saved_success') );
 		}
 	}
-	
+
 	/**
-	 * updater_init 
+	 * updater_init
 	 * Sets up the EDD_SL_Plugin_Updater object.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -189,30 +194,45 @@ class CGD_EDDSL_Magic {
 		// retrieve our license key from the DB
 		$license_key = trim( $this->get_field_value('license_key') );
 
-		// setup the updater
-		$edd_updater = new EDD_SL_Plugin_Updater( $this->url, $this->plugin_file, array(
-				'version' 	=> $this->version, 				// current version number
-				'license' 	=> $license_key, 		// license key (used get_option above to retrieve from DB)
-				'item_name' => $this->name, 	// name of this plugin
-				'author' 	=> $this->author  // author of this plugin
-			)
-		);
+		if ( ! $this->theme ) {
+			// setup the updater
+			$edd_updater = new EDD_SL_Plugin_Updater( $this->url, $this->plugin_file, array(
+					'version' 	=> $this->version, 				// current version number
+					'license' 	=> $license_key, 		// license key (used get_option above to retrieve from DB)
+					'item_name' => $this->name, 	// name of this plugin
+					'author' 	=> $this->author,  // author of this plugin
+					'url'       => home_url()
+				)
+			);
+		} else {
+			// setup the updater
+			$edd_updater = new EDD_SL_Theme_Updater( array(
+					'remote_api_url' => $this->url,
+					'version' 	     => $this->version,  // current version number
+					'license' 	     => $license_key,    // license key (used get_option above to retrieve from DB)
+					'item_name'      => $this->name, 	 // name of this plugin
+					'author' 	     => $this->author,    // author of this plugin
+					'url'            => home_url()
+				)
+			);
+		}
+
 	}
-	
+
 	/**
 	 * Adds "License" page to specified parent menu. Only attached if menu_slug is not false.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
 	function admin_menu() {
 		add_submenu_page( $this->menu_slug, "{$this->name} License Settings", "License", "manage_options", $this->prefix . "menu", array($this, "admin_page") );
 	}
-	
+
 	/**
-	 * admin_page 
+	 * admin_page
 	 * Generates license page form.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -223,7 +243,7 @@ class CGD_EDDSL_Magic {
 			<h2><?php echo $this->name; ?> License Settings</h2>
 			<form method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>">
 				<?php $this->the_nonce(); ?>
-	
+
 				<table class="form-table">
 					<tbody>
 						<tr>
@@ -235,7 +255,7 @@ class CGD_EDDSL_Magic {
 								<span>Your <?php echo $this->name; ?> license key.</span>
 							</td>
 						</tr>
-	
+
 						<?php if ( ! empty($key_status) ): ?>
 						<tr>
 							<th scope="row" valign="top">
@@ -254,29 +274,29 @@ class CGD_EDDSL_Magic {
 							</td>
 						</tr>
 						<?php endif; ?>
-						
+
 					</tbody>
 				</table>
-				
+
 				<?php submit_button(); ?>
 			</form>
 
-		</div>								
+		</div>
 
 		<?php
 	}
-	
+
 	/**
 	 * manage_license_activation
 	 * Handles license activation and deactivation
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
 	function manage_license_activation() {
-		
+
 		$action = isset($_REQUEST['activate_key']) ? 'activate_license' : 'deactivate_license';
-		
+
 		// data to send in our API request
 		$api_params = array(
 			'edd_action'=> $action,
@@ -294,11 +314,11 @@ class CGD_EDDSL_Magic {
 
 		// decode the license data
 		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
-		
+
 		if ( $action == "activate_license" ) {
 			// Front end notice only
 			// $license_data->license will be either "valid" or "invalid"
-			
+
 			if ( isset($license_data->error) ) {
 				$this->last_activation_error = $license_data->error;
 				add_action( 'admin_notices', array($this, 'notice_license_activate_error') );
@@ -307,7 +327,7 @@ class CGD_EDDSL_Magic {
 			} else {
 				add_action( 'admin_notices', array($this, 'notice_license_valid') );
 			}
-			
+
 		} else {
 			// $license_data->license will be either "deactivated" or "failed"
 			if ( $license_data->license == "failed" ) {
@@ -317,15 +337,15 @@ class CGD_EDDSL_Magic {
 				add_action( 'admin_notices', array($this, 'notice_license_deactivate_success') );
 			}
 		}
-		
+
 		// Set detailed key_status
 		$this->set_field_value('key_status', $this->get_license_status() );
 	}
-	
+
 	/**
 	 * get_license_status
 	 * Retrieve status of license key for current site.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -355,10 +375,10 @@ class CGD_EDDSL_Magic {
 
 		return $license_data->license;
 	}
-	
+
 	/**
 	 * notice_license_invalid function.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -372,7 +392,7 @@ class CGD_EDDSL_Magic {
 
 	/**
 	 * notice_license_valid function.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -383,10 +403,10 @@ class CGD_EDDSL_Magic {
 		</div>
 		<?php
 	}
-	
+
 	/**
 	 * notice_license_deactivate_failed function.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -397,10 +417,10 @@ class CGD_EDDSL_Magic {
 		</div>
 		<?php
 	}
-	
+
 	/**
 	 * notice_license_deactivate_success function.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -411,7 +431,7 @@ class CGD_EDDSL_Magic {
 		</div>
 		<?php
 	}
-	
+
 	function notice_settings_saved_success() {
 		?>
 		<div class="updated">
@@ -419,10 +439,10 @@ class CGD_EDDSL_Magic {
 		</div>
 		<?php
 	}
-	
+
 	/**
 	 * notice_license_activate_error function.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $error
 	 * @return void
@@ -432,13 +452,13 @@ class CGD_EDDSL_Magic {
 		<div class="error">
 			<p><?php echo $this->name; ?> license activation failed: <?php echo $this->activate_errors[$this->last_activation_error]; ?></p>
 		</div>
-		<?php	
+		<?php
 	}
-	
+
 	/**
-	 * set_license_check_cron 
+	 * set_license_check_cron
 	 * Create cron for license check
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -446,22 +466,22 @@ class CGD_EDDSL_Magic {
 		$this->unset_license_check_cron();
 		wp_schedule_event(time(), 'daily', $this->prefix . '_check_license');
 	}
-	
+
 	/**
-	 * unset_license_check_cron 
+	 * unset_license_check_cron
 	 * Clear cron for license check.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */
-	public function unset_license_check_cron() { 
+	public function unset_license_check_cron() {
 		wp_clear_scheduled_hook( $this->prefix . '_check_license' );
 	}
-	
+
 	/**
-	 * check_license 
+	 * check_license
 	 * Retrieve license status for current site and store in key_status setting.
-	 * 
+	 *
 	 * @access public
 	 * @return void
 	 */

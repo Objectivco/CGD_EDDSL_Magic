@@ -4,11 +4,11 @@ CGD_EDDSL_Magic
 A drop-in class that magically manages your EDD SL plugin licensing.
 
 #  What is magic and why do I need it?
-EDD's brilliant Software Licensing add-on is awesome, but its implementation examples are thin.  Managing the various activation and licensing states takes a good amount of research and setup. 
+EDD's brilliant Software Licensing add-on is awesome, but its implementation examples are thin.  Managing the various activation and licensing states takes a good amount of research and setup.
 
-Once you have it setup, it can be a major pain in the tucus to manage across your various plugins. 
+Once you have it setup, it can be a major pain in the tucus to manage across your various plugins.
 
-For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I have to update 8 plugins that have 8 slightly different implementations.  It's a major headache. 
+For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I have to update 8 plugins that have 8 slightly different implementations.  It's a major headache.
 
 `CGD_EDDSL_Magic` fixes all of this.  With as little as a single line of code, you can add a fully functioning licensing settings page to your plugin.  
 
@@ -30,23 +30,23 @@ if( !class_exists( 'CGD_EDDSL_Magic' ) ) {
 }
 ```
 
-3) In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`. 
+3) In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`.
 
 ```php
 $updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author, $plugin_file, $theme = false);
 ```
 
 **Note: The last parameter, `$plugin_file` is technically optional, but it's better to pass it in. This should be the main file for your plugin, the one with the plugin header. If you're in the main plugin file, use `__FILE__`, otherwise, define it as a constant in your main plugin file and pass it in when you instantiate the class.**
-	
+
 ## The parameters:
 #### $prefix
 This is a unique prefix for your instance.  It's used for saving settings and hooking up various behaviors.  Keep it short, and no spaces or weird symbols or other funny business.  Example: myplugin
 
 #### $menu_slug
-Assuming your plugin has a menu page, you would set the slug of that menu here so that `CGD_EDDSL_Magic` can add a submenu called "License" to this menu.  If you'd rather control this yourself, set to `false`. 
+Assuming your plugin has a menu page, you would set the slug of that menu here so that `CGD_EDDSL_Magic` can add a submenu called "License" to this menu.  If you'd rather control this yourself, set to `false`.
 
 #### $host_url
-The URL of the site that hosts your plugins. 
+The URL of the site that hosts your plugins.
 
 #### $plugin_version
 The version of the plugin.
@@ -58,10 +58,10 @@ The name of the plugin as setup in EDD.
 The author of the plugin.
 
 #### $plugin_file
-The main plugin file. 
+The main plugin file.
 
 #### $theme
-Set to true for theme updates. 
+Set to true for theme updates.
 
 If you're using a class, it's probably a good idea to set a class variable called `updater` and then assign the new `CGD_EDDSL_Magic` instance to that. It will make it easier to access later.
 
@@ -69,19 +69,19 @@ If you're using a class, it's probably a good idea to set a class variable calle
 
 ## What about updating themes?
 
-If your project is a theme, you simply need to set the `$theme` parameter above to true. This makes the `$plugin_file` parameter uneccessary, so you can simply set this parameter to `false`. Either way, it will not be used. 
+If your project is a theme, you simply need to set the `$theme` parameter above to true. This makes the `$plugin_file` parameter uneccessary, so you can simply set this parameter to `false`. Either way, it will not be used.
 
 
 # Advanced Implementation
 
-## Controlling the licensing settings page 
-By default, a menu item called "License" is added to the parent menu of your choice. If you would like to have full control of where the license settings page is, that's actually really easy to do too. 
+## Controlling the licensing settings page
+By default, a menu item called "License" is added to the parent menu of your choice. If you would like to have full control of where the license settings page is, that's actually really easy to do too.
 
 Just set `$menu_slug` to false in your instantation, and then drop this line in your admin page, wherever you prefer:
 ``` php
 $updater->admin_page();
 ```
-Obviously, the exact syntax will vary depending on how you implement it.  This is one reason I find it easier to set the updater instance as a class variable. 
+Obviously, the exact syntax will vary depending on how you implement it.  This is one reason I find it easier to set the updater instance as a class variable.
 
 **One important note: Do not place this line in another HTML form.  It will screw things up. Browsers hate nested forms. (and HTML standards do not permit them)**
 
@@ -98,11 +98,11 @@ $this->updater->set_license_check_cron();
 $this->updater->unset_license_check_cron();
 ```
 
-This will create daily checks that keep your key_status variable up-to-date. 
+This will create daily checks that keep your key_status variable up-to-date.
 
 # Really Advanced Implementation
 
-If this does not satisfy you, and you want to add some type of nag to the plugin listing on the plugins page in WP admin, here's a quick example of how you might do that.  This is just a starting point, so you'll have to parse through it to figure out how it works. 
+If this does not satisfy you, and you want to add some type of nag to the plugin listing on the plugins page in WP admin, here's a quick example of how you might do that.  This is just a starting point, so you'll have to parse through it to figure out how it works.
 
 ```php
 	add_action('admin_menu', 'add_key_nag', 11);
@@ -131,7 +131,7 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 			}
 		}
 	}
-	
+
 	function keynag() {
 		return "<span style='color:red'>You're missing out on important updates because your license key is missing, invalid, or expired.</span>";
 	}
@@ -139,11 +139,14 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 
 # Changelog
 
+## Version 0.3.1
+- Add trainling slash to remote API url. Fixes odd bug with wp_remote_get(). 
+
 ## Version 0.3
 - Added theme update support!
 
 ## Version 0.2
-- Added url parameter to API requests for more reliable handling. 
+- Added url parameter to API requests for more reliable handling.
 
 ## Version 0.1
-- Initial release. 
+- Initial release.

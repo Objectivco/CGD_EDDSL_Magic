@@ -1,6 +1,6 @@
 {
     "name": "objectivco/cgd_eddsl_magic",
-    "description": "A drop-in class that magically manages your EDD SL plugin licensing.",
+    "description": "A drop-in class that magically manages Easy Digital Downloads Software Licensing for plugins and themes.",
     "type": "library",
     "license": "GPL-3.0+",
     "authors": [
@@ -10,5 +10,10 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "php": ">=5.2.0"
+    },
+    "autoload": {
+        "classmap": ["src/CGD_EDDSL_Magic.php"]
+    }
 }

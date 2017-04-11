@@ -14,7 +14,7 @@ if( ! class_exists( 'EDD_SL_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.3.1
+ * @version 0.3.2
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -30,6 +30,7 @@ class CGD_EDDSL_Magic {
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
 	var $plugin_file; // we need to pass this in so it maps to WP
 	var $theme = false; // do we have a theme or a plugin?
+	var $beta = false; // is this a beta?
 
 	/**
 	 * Constructor
@@ -43,7 +44,7 @@ class CGD_EDDSL_Magic {
 	 * @param string $author The author of the plugin.
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false ) {
 		if ( $prefix === false ) {
 			error_log('CGD_EDDSL_Magic: No prefix specified. Aborting.');
 			return;
@@ -68,6 +69,7 @@ class CGD_EDDSL_Magic {
 		$this->prefix = $prefix . "_";
 		$this->plugin_file = $plugin_file;
 		$this->theme = $theme;
+		$this->beta = $beta;
 
 		$this->key_statuses = array(
 			'invalid' => 'The entered license key is not valid.',
@@ -198,11 +200,11 @@ class CGD_EDDSL_Magic {
 		if ( ! $this->theme ) {
 			// setup the updater
 			$edd_updater = new EDD_SL_Plugin_Updater( $this->url, $this->plugin_file, array(
-					'version' 	=> $this->version, 				// current version number
-					'license' 	=> $license_key, 		// license key (used get_option above to retrieve from DB)
-					'item_name' => $this->name, 	// name of this plugin
-					'author' 	=> $this->author,  // author of this plugin
-					'url'       => home_url()
+					'version' 	=> $this->version,  // current version number
+					'license' 	=> $license_key,    // license key (used get_option above to retrieve from DB)
+					'item_name' => $this->name,     // name of this plugin
+					'author' 	=> $this->author,   // author of this plugin
+					'beta'      => $this->beta,     // beta or not (default false)
 				)
 			);
 		} else {
@@ -489,4 +491,103 @@ class CGD_EDDSL_Magic {
 	function check_license() {
 		$this->set_field_value('key_status', $this->get_license_status() );
 	}
+
+	/**
+	 * get_license_data
+	 * Retrieve license data for current site.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	function get_license_data( ) {
+
+		global $wp_version;
+
+		$license = trim( $this->get_field_value('license_key') );
+
+		if ( empty($license) ) return;
+
+		$api_params = array(
+			'edd_action'	=> 'check_license',
+			'license' 		=> $license,
+			'item_name' 	=> urlencode( $this->name ),
+			'url'			=> home_url()
+		);
+
+		// Call the custom API.
+		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+
+
+		if ( is_wp_error( $response ) )
+			return false;
+
+		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+
+		return $license_data;
+	}
+
+	/**
+	 * get_license_activation_limit function.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	function get_license_activation_limit() {
+		global $wp_version;
+
+		$license = trim( $this->get_field_value('license_key') );
+
+		if ( empty($license) ) return 0;
+
+		$api_params = array(
+			'edd_action'	=> 'check_license',
+			'license' 		=> $license,
+			'item_name' 	=> urlencode( $this->name ),
+			'url'			=> home_url()
+		);
+
+		// Call the custom API.
+		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+
+
+		if ( is_wp_error( $response ) ) return 0;
+
+		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+		if ( ! isset($license_data->license_limit) ) return 0;
+
+		return $license_data->license_limit;
+	}
+
+	/**
+	 * get_license_upgrades function.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	function get_license_upgrades() {
+		global $wp_version;
+
+		$license = trim( $this->get_field_value('license_key') );
+
+		if ( empty($license) ) return 0;
+
+		$api_params = array(
+			'edd_action'	=> 'get_license_upgrades',
+			'license' 		=> $license,
+			'item_name' 	=> urlencode( $this->name ),
+			'url'			=> home_url()
+		);
+
+		// Call the custom API.
+		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+
+
+		if ( is_wp_error( $response ) ) return 0;
+
+		$upgrades = json_decode( wp_remote_retrieve_body( $response ) );
+		if ( is_null($upgrades) || ! $upgrades ) return;
+
+		return $upgrades;
+	}
+
 }

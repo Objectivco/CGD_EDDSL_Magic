@@ -139,8 +139,13 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 
 # Changelog
 
+## Version 0.3.2
+- Composer package.
+- Update EDD_SL_Plugin_Updater.
+- Add some utility functions that we use internally that you may find useful. 
+
 ## Version 0.3.1
-- Add trainling slash to remote API url. Fixes odd bug with wp_remote_get(). 
+- Add trailing slash to remote API url. Fixes odd bug with wp_remote_get().
 
 ## Version 0.3
 - Added theme update support!

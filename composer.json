@@ -1,0 +1,14 @@
+{
+    "name": "objectivco/cgd_eddsl_magic",
+    "description": "A drop-in class that magically manages your EDD SL plugin licensing.",
+    "type": "library",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Clifton Griffin",
+            "email": "clif@objectiv.co"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

@@ -1,6 +1,6 @@
 <?php
 
-if( !class_exists( 'EDD_SL_Plugin_Updater' ) ) {
+if( ! class_exists( 'EDD_SL_Plugin_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
 }
 
@@ -14,7 +14,7 @@ if( ! class_exists( 'EDD_SL_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.3.2
+ * @version 0.3.3
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -122,7 +122,7 @@ class CGD_EDDSL_Magic {
 	 *
 	 * @access public
 	 * @param string $setting The key for the setting you're saving.
-	 * @return void
+	 * @return string The field name
 	 */
 	public function get_field_name ( $setting ) {
 		return "{$this->prefix}_mb_setting[$setting]";
@@ -134,7 +134,7 @@ class CGD_EDDSL_Magic {
 	 *
 	 * @access public
 	 * @param string $setting The setting key you're retrieving (default: false)
-	 * @return void
+	 * @return string The field value
 	 */
 	public function get_field_value ( $setting = false ) {
 		if ( $setting === false ) return false;
@@ -350,7 +350,7 @@ class CGD_EDDSL_Magic {
 	 * Retrieve status of license key for current site.
 	 *
 	 * @access public
-	 * @return void
+	 * @return string The license status
 	 */
 	function get_license_status( ) {
 
@@ -497,7 +497,7 @@ class CGD_EDDSL_Magic {
 	 * Retrieve license data for current site.
 	 *
 	 * @access public
-	 * @return void
+	 * @return stdClass License data
 	 */
 	function get_license_data( ) {
 
@@ -530,7 +530,7 @@ class CGD_EDDSL_Magic {
 	 * get_license_activation_limit function.
 	 *
 	 * @access public
-	 * @return void
+	 * @return int The license activation limit
 	 */
 	function get_license_activation_limit() {
 		global $wp_version;
@@ -562,7 +562,7 @@ class CGD_EDDSL_Magic {
 	 * get_license_upgrades function.
 	 *
 	 * @access public
-	 * @return void
+	 * @return stdClass The license upgrades
 	 */
 	function get_license_upgrades() {
 		global $wp_version;

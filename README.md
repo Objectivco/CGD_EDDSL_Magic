@@ -139,6 +139,10 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 
 # Changelog
 
+## Version 0.4.0
+- Fix return types.
+- Replace invalid reference to class EDD_SL_Theme_Updater with EDD_Theme_Updater.
+
 ## Version 0.3.2
 - Composer package.
 - Update EDD_SL_Plugin_Updater.

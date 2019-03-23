@@ -4,7 +4,7 @@ if( ! class_exists( 'EDD_SL_Plugin_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
 }
 
-if( ! class_exists( 'EDD_SL_Theme_Updater' ) ) {
+if( ! class_exists( 'EDD_Theme_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Theme_Updater.php' );
 }
 

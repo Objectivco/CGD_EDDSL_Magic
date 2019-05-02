@@ -63,6 +63,14 @@ The main plugin file.
 #### $theme
 Set to true for theme updates.
 
+#### $beta
+Set to true to enable beta versions.
+
+#### $deprecated_url
+Before 0.5.0, `home_url()` was used for all license activation checks. For backwards compatibility reasons this defaults to true. For new projects, you should set to false.
+
+---
+
 If you're using a class, it's probably a good idea to set a class variable called `updater` and then assign the new `CGD_EDDSL_Magic` instance to that. It will make it easier to access later.
 
 **In a basic setup, you're done at this point.  Your plugin will now have a fully functioning license settings page, added to whatever your parent menu is.  For more advanced options, continue below.**
@@ -138,6 +146,10 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 ```
 
 # Changelog
+
+## Version 0.5.0
+- Add deprecated_url option and default to true. This tells the updater to check `home_url()` for site activation actions instead of `get_site_url()`. New projects should use `get_site_url()`.
+- WP Coding Standards fixes.
 
 ## Version 0.4.0
 - Fix return types.

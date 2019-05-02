@@ -35,16 +35,16 @@ class CGD_EDDSL_Magic {
 	 * Constructor
 	 *
 	 * @access public
-	 * @param string $prefix A prefix that keeps your setting separate for this instance. Short and no spaces. (default: false)
-	 * @param string $menu_slug The menu slug of the parent menu you want to attach the License submenu item to. Same syntax as add_submenu_page()  (default: false)
-	 * @param string $url The URL of your host site (default: false)
-	 * @param string $version The plugin version (default: false)
-	 * @param string $name The plugin name (default: false)
+	 * @param string|bool $prefix A prefix that keeps your setting separate for this instance. Short and no spaces. (default: false)
+	 * @param string|bool $menu_slug The menu slug of the parent menu you want to attach the License submenu item to. Same syntax as add_submenu_page()  (default: false)
+	 * @param string|bool $url The URL of your host site (default: false)
+	 * @param string|bool $version The plugin version (default: false)
+	 * @param string|bool $name The plugin name (default: false)
 	 * @param string $author The author of the plugin.
-	 * @param string $plugin_file The plugin file
-	 * @param string $theme True if updating a theme.
-	 * @param string $beta True if beta versions are enabled
-	 * @param string $deprecated_url True if we should use home_url() instead of get_site_url()
+	 * @param string|bool $plugin_file The plugin file
+	 * @param string|bool $theme True if updating a theme.
+	 * @param string|bool $beta True if beta versions are enabled
+	 * @param string|bool $deprecated_url True if we should use home_url() instead of get_site_url()
 	 * @return void
 	 */
 	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false, $deprecated_url = true ) {

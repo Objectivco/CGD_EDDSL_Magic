@@ -1,10 +1,9 @@
 <?php
-
-if( ! class_exists( 'EDD_SL_Plugin_Updater' ) ) {
+if ( ! class_exists( 'EDD_SL_Plugin_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
 }
 
-if( ! class_exists( 'EDD_Theme_Updater' ) ) {
+if ( ! class_exists( 'EDD_Theme_Updater' ) ) {
 	include( dirname( __FILE__ ) . '/lib/EDD_SL_Theme_Updater.php' );
 }
 
@@ -14,12 +13,11 @@ if( ! class_exists( 'EDD_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.4.0
+ * @version 0.5.0
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
 class CGD_EDDSL_Magic {
-
 	var $menu_slug; // parent menu slug to attach "License" submenu to
 	var $prefix; // prefix for internal settings
 	var $url; // plugin host site URL for EDD SL
@@ -29,8 +27,9 @@ class CGD_EDDSL_Magic {
 	var $activate_errors; // store list of activation errors and error messages
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
 	var $plugin_file; // we need to pass this in so it maps to WP
-	var $theme = false; // do we have a theme or a plugin?
-	var $beta = false; // is this a beta?
+	var $theme          = false; // do we have a theme or a plugin?
+	var $beta           = false; // is this a beta?
+	var $deprecated_url = true; // use home_url() for license checks instead of get_site_url()
 
 	/**
 	 * Constructor
@@ -42,65 +41,70 @@ class CGD_EDDSL_Magic {
 	 * @param string $version The plugin version (default: false)
 	 * @param string $name The plugin name (default: false)
 	 * @param string $author The author of the plugin.
+	 * @param string $plugin_file The plugin file
+	 * @param string $theme True if updating a theme.
+	 * @param string $beta True if beta versions are enabled
+	 * @param string $deprecated_url True if we should use home_url() instead of get_site_url()
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false, $deprecated_url = true ) {
 		if ( $prefix === false ) {
-			error_log('CGD_EDDSL_Magic: No prefix specified. Aborting.');
+			error_log( 'CGD_EDDSL_Magic: No prefix specified. Aborting.' );
 			return;
 		}
 
 		if ( $url === false || $version === false || $name == false ) {
-			error_log('CGD_EDDSL_Magic: url, version, plugin file, or name parameter was false. Aborting.');
+			error_log( 'CGD_EDDSL_Magic: url, version, plugin file, or name parameter was false. Aborting.' );
 			return;
 		}
 
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {
-			$bt = debug_backtrace();
+			$bt          = debug_backtrace();
 			$plugin_file = $bt[0]['file'];
 		}
 
-		$this->url = trailingslashit($url);
-		$this->version = $version;
-		$this->name = $name;
-		$this->author = $author;
-		$this->menu_slug = $menu_slug;
-		$this->prefix = $prefix . "_";
-		$this->plugin_file = $plugin_file;
-		$this->theme = $theme;
-		$this->beta = $beta;
+		$this->url            = trailingslashit( $url );
+		$this->version        = $version;
+		$this->name           = $name;
+		$this->author         = $author;
+		$this->menu_slug      = $menu_slug;
+		$this->prefix         = $prefix . '_';
+		$this->plugin_file    = $plugin_file;
+		$this->theme          = $theme;
+		$this->beta           = $beta;
+		$this->deprecated_url = $deprecated_url;
 
 		$this->key_statuses = array(
-			'invalid' => 'The entered license key is not valid.',
-			'expired' => 'Your key has expired and needs to be renewed.',
-			'inactive' => 'Your license key is valid, but is not active.',
-			'disabled' => 'Your license key is currently disabled. Please contact support.',
+			'invalid'       => 'The entered license key is not valid.',
+			'expired'       => 'Your key has expired and needs to be renewed.',
+			'inactive'      => 'Your license key is valid, but is not active.',
+			'disabled'      => 'Your license key is currently disabled. Please contact support.',
 			'site_inactive' => 'Your license key is valid, but not active for this site.',
-			'valid' => 'Your license key is valid and active for this site.'
+			'valid'         => 'Your license key is valid and active for this site.',
 		);
 
 		$this->activate_errors = array(
-			'missing' => 'The provided license key does not seem to exist.',
-			'revoked' => 'The provided license key has been revoked. Please contact support.',
+			'missing'             => 'The provided license key does not seem to exist.',
+			'revoked'             => 'The provided license key has been revoked. Please contact support.',
 			'no_activations_left' => 'This license key has been activated the maximum number of times.',
-			'expired' => 'This license key has expired.',
-			'key_mismatch' => 'An unknown error has occurred: key_mismatch'
+			'expired'             => 'This license key has expired.',
+			'key_mismatch'        => 'An unknown error has occurred: key_mismatch',
 		);
 
 		// Instantiate EDD_SL_Plugin_Updater
-		add_action( 'admin_init', array($this, 'updater_init'), 0 ); // run first
+		add_action( 'admin_init', array( $this, 'updater_init' ), 0 ); // run first
 
 		// Add License settings page to menu
-		if ( $this->menu_slug !== false )
-			add_action('admin_menu', array($this,'admin_menu'), 11);
+		if ( $this->menu_slug !== false ) {
+			add_action( 'admin_menu', array( $this, 'admin_menu' ), 11 );
+		}
 
 		// Form Handler
-		add_action('admin_init', array($this, 'save_settings') );
+		add_action( 'admin_init', array( $this, 'save_settings' ) );
 
 		// Cron action
-		add_action($this->prefix . '_check_license', array($this, 'check_license') );
-
+		add_action( $this->prefix . '_check_license', array( $this, 'check_license' ) );
 	}
 
 	// Form Saving Stuff
@@ -124,7 +128,7 @@ class CGD_EDDSL_Magic {
 	 * @param string $setting The key for the setting you're saving.
 	 * @return string The field name
 	 */
-	public function get_field_name ( $setting ) {
+	public function get_field_name( $setting ) {
 		return "{$this->prefix}_mb_setting[$setting]";
 	}
 
@@ -136,10 +140,12 @@ class CGD_EDDSL_Magic {
 	 * @param string $setting The setting key you're retrieving (default: false)
 	 * @return string The field value
 	 */
-	public function get_field_value ( $setting = false ) {
-		if ( $setting === false ) return false;
+	public function get_field_value( $setting = false ) {
+		if ( $setting === false ) {
+			return false;
+		}
 
-		$value = get_option($this->prefix . "_" . $setting);
+		$value = get_option( $this->prefix . '_' . $setting );
 
 		return $value;
 	}
@@ -153,10 +159,12 @@ class CGD_EDDSL_Magic {
 	 * @param mixed $value
 	 * @return void
 	 */
-	public function set_field_value ( $setting = false, $value ) {
-		if ( $setting === false ) return false;
+	public function set_field_value( $setting = false, $value ) {
+		if ( $setting === false ) {
+			return false;
+		}
 
-		$value = update_option($this->prefix . "_" . $setting, $value);
+		$value = update_option( $this->prefix . '_' . $setting, $value );
 	}
 
 	/**
@@ -167,21 +175,20 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	public function save_settings() {
-		//print_r($_REQUEST); die;
-		if( isset($_REQUEST["{$this->prefix}_mb_setting"]) && check_admin_referer("save_{$this->prefix}_mb_settings","{$this->prefix}_mb_save") ) {
-			$settings = $_REQUEST["{$this->prefix}_mb_setting"];
-			foreach($settings as $setting => $value) {
-				$this->set_field_value($setting, $value);
+		if ( isset( $_REQUEST[ "{$this->prefix}_mb_setting" ] ) && check_admin_referer( "save_{$this->prefix}_mb_settings", "{$this->prefix}_mb_save" ) ) {
+			$settings = $_REQUEST[ "{$this->prefix}_mb_setting" ];
+			foreach ( $settings as $setting => $value ) {
+				$this->set_field_value( $setting, $value );
 			}
 
 			// Handle activation if applicable
-			if ( isset($_REQUEST['activate_key']) || isset($_REQUEST['deactivate_key']) ) {
+			if ( isset( $_REQUEST['activate_key'] ) || isset( $_REQUEST['deactivate_key'] ) ) {
 				$this->manage_license_activation();
 			} else {
 				$this->check_license();
 			}
 
-			add_action( 'admin_notices', array($this, 'notice_settings_saved_success') );
+			add_action( 'admin_notices', array( $this, 'notice_settings_saved_success' ) );
 		}
 	}
 
@@ -193,29 +200,30 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function updater_init() {
-
 		// retrieve our license key from the DB
-		$license_key = trim( $this->get_field_value('license_key') );
+		$license_key = trim( $this->get_field_value( 'license_key' ) );
 
 		if ( ! $this->theme ) {
 			// setup the updater
-			$edd_updater = new EDD_SL_Plugin_Updater( $this->url, $this->plugin_file, array(
-					'version' 	=> $this->version,  // current version number
-					'license' 	=> $license_key,    // license key (used get_option above to retrieve from DB)
+			$edd_updater = new EDD_SL_Plugin_Updater(
+				$this->url, $this->plugin_file, array(
+					'version'   => $this->version,  // current version number
+					'license'   => $license_key,    // license key (used get_option above to retrieve from DB)
 					'item_name' => $this->name,     // name of this plugin
-					'author' 	=> $this->author,   // author of this plugin
+					'author'    => $this->author,   // author of this plugin
 					'beta'      => $this->beta,     // beta or not (default false)
 				)
 			);
 		} else {
 			// setup the updater
-			$edd_updater = new EDD_Theme_Updater( array(
+			$edd_updater = new EDD_Theme_Updater(
+				array(
 					'remote_api_url' => $this->url,
-					'version' 	     => $this->version,  // current version number
-					'license' 	     => $license_key,    // license key (used get_option above to retrieve from DB)
-					'item_name'      => $this->name, 	 // name of this plugin
-					'author' 	     => $this->author,    // author of this plugin
-					'url'            => home_url()
+					'version'        => $this->version,  // current version number
+					'license'        => $license_key,    // license key (used get_option above to retrieve from DB)
+					'item_name'      => $this->name,     // name of this plugin
+					'author'         => $this->author,    // author of this plugin
+					'url'            => $this->deprecated_url ? home_url() : get_site_url(),
 				)
 			);
 		}
@@ -229,7 +237,7 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function admin_menu() {
-		add_submenu_page( $this->menu_slug, "{$this->name} License Settings", "License", "manage_options", $this->prefix . "menu", array($this, "admin_page") );
+		add_submenu_page( $this->menu_slug, "{$this->name} License Settings", 'License', 'manage_options', $this->prefix . 'menu', array( $this, 'admin_page' ) );
 	}
 
 	/**
@@ -240,7 +248,7 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function admin_page() {
-		$key_status = $this->get_field_value('key_status');
+		$key_status = $this->get_field_value( 'key_status' );
 		?>
 		<div class="wrap">
 			<h2><?php echo $this->name; ?> License Settings</h2>
@@ -251,28 +259,28 @@ class CGD_EDDSL_Magic {
 					<tbody>
 						<tr>
 							<th scope="row" valign="top">
-								<label for="<?php echo $this->get_field_name('license_key'); ?>">License Key</label>
+								<label for="<?php echo $this->get_field_name( 'license_key' ); ?>">License Key</label>
 							</th>
 							<td>
-								<input type="text" class="regular-text" id="<?php echo $this->get_field_name('license_key'); ?>" name="<?php echo $this->get_field_name('license_key'); ?>" value="<?php echo $this->get_field_value('license_key'); ?>" /><br />
+								<input type="text" class="regular-text" id="<?php echo $this->get_field_name( 'license_key' ); ?>" name="<?php echo $this->get_field_name( 'license_key' ); ?>" value="<?php echo $this->get_field_value( 'license_key' ); ?>" /><br />
 								<span>Your <?php echo $this->name; ?> license key.</span>
 							</td>
 						</tr>
 
-						<?php if ( ! empty($key_status) ): ?>
+						<?php if ( ! empty( $key_status ) ) : ?>
 						<tr>
 							<th scope="row" valign="top">
 								<label>Key Status</label>
 							</th>
 							<td>
-								<?php if ( $key_status == "inactive" || $key_status == "site_inactive" ): ?>
+								<?php if ( $key_status == 'inactive' || $key_status == 'site_inactive' ) : ?>
 									<input type="submit" name="activate_key" class="button-secondary" value="Activate Site" />
-									<p style="color:red;"><?php echo $this->key_statuses[$key_status]; ?></p>
-								<?php elseif ( $key_status == "valid" ): ?>
+									<p style="color:red;"><?php echo $this->key_statuses[ $key_status ]; ?></p>
+								<?php elseif ( $key_status == 'valid' ) : ?>
 									<input type="submit" name="deactivate_key" class="button-secondary" value="Deactivate Site" />
-									<p style="color:green;"><?php echo $this->key_statuses[$key_status]; ?></p>
-								<?php else: ?>
-									<p style="color:red;"><?php echo $this->key_statuses[$key_status]; ?></p>
+									<p style="color:green;"><?php echo $this->key_statuses[ $key_status ]; ?></p>
+								<?php else : ?>
+									<p style="color:red;"><?php echo $this->key_statuses[ $key_status ]; ?></p>
 								<?php endif; ?>
 							</td>
 						</tr>
@@ -297,52 +305,56 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function manage_license_activation() {
-
-		$action = isset($_REQUEST['activate_key']) ? 'activate_license' : 'deactivate_license';
+		$action = isset( $_REQUEST['activate_key'] ) ? 'activate_license' : 'deactivate_license';
 
 		// data to send in our API request
 		$api_params = array(
-			'edd_action'=> $action,
-			'license' 	=> $this->get_field_value('license_key'),
-			'item_name' => urlencode( $this->name ), // the name of our product in EDD
-			'url'		=> home_url()
+			'edd_action' => $action,
+			'license'    => $this->get_field_value( 'license_key' ),
+			'item_name'  => urlencode( $this->name ), // the name of our product in EDD
+			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
 		);
 
 		// Call the custom API.
-		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+		$response = wp_remote_get(
+			add_query_arg( $api_params, $this->url ), array(
+				'timeout'   => 15,
+				'sslverify' => false,
+			)
+		);
 
 		// make sure the response came back okay
-		if ( is_wp_error( $response ) )
+		if ( is_wp_error( $response ) ) {
 			return false;
+		}
 
 		// decode the license data
 		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
 
-		if ( $action == "activate_license" ) {
+		if ( $action == 'activate_license' ) {
 			// Front end notice only
 			// $license_data->license will be either "valid" or "invalid"
 
-			if ( isset($license_data->error) ) {
+			if ( isset( $license_data->error ) ) {
 				$this->last_activation_error = $license_data->error;
-				add_action( 'admin_notices', array($this, 'notice_license_activate_error') );
-			} else if ( $license_data->license == "invalid" ) {
-				add_action( 'admin_notices', array($this, 'notice_license_invalid') );
+				add_action( 'admin_notices', array( $this, 'notice_license_activate_error' ) );
+			} elseif ( $license_data->license == 'invalid' ) {
+				add_action( 'admin_notices', array( $this, 'notice_license_invalid' ) );
 			} else {
-				add_action( 'admin_notices', array($this, 'notice_license_valid') );
+				add_action( 'admin_notices', array( $this, 'notice_license_valid' ) );
 			}
-
 		} else {
 			// $license_data->license will be either "deactivated" or "failed"
-			if ( $license_data->license == "failed" ) {
+			if ( $license_data->license == 'failed' ) {
 				// warn user
-				add_action( 'admin_notices', array($this, 'notice_license_deactivate_failed') );
+				add_action( 'admin_notices', array( $this, 'notice_license_deactivate_failed' ) );
 			} else {
-				add_action( 'admin_notices', array($this, 'notice_license_deactivate_success') );
+				add_action( 'admin_notices', array( $this, 'notice_license_deactivate_success' ) );
 			}
 		}
 
 		// Set detailed key_status
-		$this->set_field_value('key_status', $this->get_license_status() );
+		$this->set_field_value( 'key_status', $this->get_license_status() );
 	}
 
 	/**
@@ -352,27 +364,31 @@ class CGD_EDDSL_Magic {
 	 * @access public
 	 * @return string The license status
 	 */
-	function get_license_status( ) {
+	function get_license_status() {
+		$license = trim( $this->get_field_value( 'license_key' ) );
 
-		global $wp_version;
-
-		$license = trim( $this->get_field_value('license_key') );
-
-		if ( empty($license) ) return;
+		if ( empty( $license ) ) {
+			return;
+		}
 
 		$api_params = array(
-			'edd_action'	=> 'check_license',
-			'license' 		=> $license,
-			'item_name' 	=> urlencode( $this->name ),
-			'url'			=> home_url()
+			'edd_action' => 'check_license',
+			'license'    => $license,
+			'item_name'  => urlencode( $this->name ),
+			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
 		);
 
 		// Call the custom API.
-		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+		$response = wp_remote_get(
+			add_query_arg( $api_params, $this->url ), array(
+				'timeout'   => 15,
+				'sslverify' => false,
+			)
+		);
 
-
-		if ( is_wp_error( $response ) )
+		if ( is_wp_error( $response ) ) {
 			return false;
+		}
 
 		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
 
@@ -450,10 +466,10 @@ class CGD_EDDSL_Magic {
 	 * @param mixed $error
 	 * @return void
 	 */
-	function notice_license_activate_error($error) {
+	function notice_license_activate_error( $error ) {
 		?>
 		<div class="error">
-			<p><?php echo $this->name; ?> license activation failed: <?php echo $this->activate_errors[$this->last_activation_error]; ?></p>
+			<p><?php echo $this->name; ?> license activation failed: <?php echo $this->activate_errors[ $this->last_activation_error ]; ?></p>
 		</div>
 		<?php
 	}
@@ -467,7 +483,7 @@ class CGD_EDDSL_Magic {
 	 */
 	public function set_license_check_cron() {
 		$this->unset_license_check_cron();
-		wp_schedule_event(time(), 'daily', $this->prefix . '_check_license');
+		wp_schedule_event( time(), 'daily', $this->prefix . '_check_license' );
 	}
 
 	/**
@@ -489,7 +505,7 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function check_license() {
-		$this->set_field_value('key_status', $this->get_license_status() );
+		$this->set_field_value( 'key_status', $this->get_license_status() );
 	}
 
 	/**
@@ -499,27 +515,31 @@ class CGD_EDDSL_Magic {
 	 * @access public
 	 * @return stdClass License data
 	 */
-	function get_license_data( ) {
+	function get_license_data() {
+		$license = trim( $this->get_field_value( 'license_key' ) );
 
-		global $wp_version;
-
-		$license = trim( $this->get_field_value('license_key') );
-
-		if ( empty($license) ) return;
+		if ( empty( $license ) ) {
+			return;
+		}
 
 		$api_params = array(
-			'edd_action'	=> 'check_license',
-			'license' 		=> $license,
-			'item_name' 	=> urlencode( $this->name ),
-			'url'			=> home_url()
+			'edd_action' => 'check_license',
+			'license'    => $license,
+			'item_name'  => urlencode( $this->name ),
+			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
 		);
 
 		// Call the custom API.
-		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+		$response = wp_remote_get(
+			add_query_arg( $api_params, $this->url ), array(
+				'timeout'   => 15,
+				'sslverify' => false,
+			)
+		);
 
-
-		if ( is_wp_error( $response ) )
+		if ( is_wp_error( $response ) ) {
 			return false;
+		}
 
 		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
 
@@ -533,27 +553,35 @@ class CGD_EDDSL_Magic {
 	 * @return int The license activation limit
 	 */
 	function get_license_activation_limit() {
-		global $wp_version;
+		$license = trim( $this->get_field_value( 'license_key' ) );
 
-		$license = trim( $this->get_field_value('license_key') );
-
-		if ( empty($license) ) return 0;
+		if ( empty( $license ) ) {
+			return 0;
+		}
 
 		$api_params = array(
-			'edd_action'	=> 'check_license',
-			'license' 		=> $license,
-			'item_name' 	=> urlencode( $this->name ),
-			'url'			=> home_url()
+			'edd_action' => 'check_license',
+			'license'    => $license,
+			'item_name'  => urlencode( $this->name ),
+			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
 		);
 
 		// Call the custom API.
-		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+		$response = wp_remote_get(
+			add_query_arg( $api_params, $this->url ), array(
+				'timeout'   => 15,
+				'sslverify' => false,
+			)
+		);
 
-
-		if ( is_wp_error( $response ) ) return 0;
+		if ( is_wp_error( $response ) ) {
+			return 0;
+		}
 
 		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
-		if ( ! isset($license_data->license_limit) ) return 0;
+		if ( ! isset( $license_data->license_limit ) ) {
+			return 0;
+		}
 
 		return $license_data->license_limit;
 	}
@@ -565,27 +593,35 @@ class CGD_EDDSL_Magic {
 	 * @return stdClass The license upgrades
 	 */
 	function get_license_upgrades() {
-		global $wp_version;
+		$license = trim( $this->get_field_value( 'license_key' ) );
 
-		$license = trim( $this->get_field_value('license_key') );
-
-		if ( empty($license) ) return 0;
+		if ( empty( $license ) ) {
+			return 0;
+		}
 
 		$api_params = array(
-			'edd_action'	=> 'get_license_upgrades',
-			'license' 		=> $license,
-			'item_name' 	=> urlencode( $this->name ),
-			'url'			=> home_url()
+			'edd_action' => 'get_license_upgrades',
+			'license'    => $license,
+			'item_name'  => urlencode( $this->name ),
+			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
 		);
 
 		// Call the custom API.
-		$response = wp_remote_get( add_query_arg( $api_params, $this->url ), array( 'timeout' => 15, 'sslverify' => false ) );
+		$response = wp_remote_get(
+			add_query_arg( $api_params, $this->url ), array(
+				'timeout'   => 15,
+				'sslverify' => false,
+			)
+		);
 
-
-		if ( is_wp_error( $response ) ) return 0;
+		if ( is_wp_error( $response ) ) {
+			return 0;
+		}
 
 		$upgrades = json_decode( wp_remote_retrieve_body( $response ) );
-		if ( is_null($upgrades) || ! $upgrades ) return;
+		if ( is_null( $upgrades ) || ! $upgrades ) {
+			return;
+		}
 
 		return $upgrades;
 	}

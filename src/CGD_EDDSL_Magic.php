@@ -27,9 +27,9 @@ class CGD_EDDSL_Magic {
 	var $activate_errors; // store list of activation errors and error messages
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
 	var $plugin_file; // we need to pass this in so it maps to WP
-	var $theme          = false; // do we have a theme or a plugin?
-	var $beta           = false; // is this a beta?
-	var $home_url       = false;
+	var $theme    = false; // do we have a theme or a plugin?
+	var $beta     = false; // is this a beta?
+	var $home_url = false;
 
 	/**
 	 * Constructor
@@ -59,8 +59,8 @@ class CGD_EDDSL_Magic {
 		}
 
 		if ( false === $home_url ) {
-		    $this->home_url = get_home_url();
-        }
+			$this->home_url = get_home_url();
+		}
 
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {
@@ -68,15 +68,15 @@ class CGD_EDDSL_Magic {
 			$plugin_file = $bt[0]['file'];
 		}
 
-		$this->url            = trailingslashit( $url );
-		$this->version        = $version;
-		$this->name           = $name;
-		$this->author         = $author;
-		$this->menu_slug      = $menu_slug;
-		$this->prefix         = $prefix . '_';
-		$this->plugin_file    = $plugin_file;
-		$this->theme          = $theme;
-		$this->beta           = $beta;
+		$this->url         = trailingslashit( $url );
+		$this->version     = $version;
+		$this->name        = $name;
+		$this->author      = $author;
+		$this->menu_slug   = $menu_slug;
+		$this->prefix      = $prefix . '_';
+		$this->plugin_file = $plugin_file;
+		$this->theme       = $theme;
+		$this->beta        = $beta;
 
 		$this->key_statuses = array(
 			'invalid'       => 'The entered license key is not valid.',

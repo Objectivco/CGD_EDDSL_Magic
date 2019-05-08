@@ -12,10 +12,6 @@ For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I h
 
 `CGD_EDDSL_Magic` fixes all of this.  With as little as a single line of code, you can add a fully functioning licensing settings page to your plugin.  
 
-# How do I magic?
-
-The fastest way to understand implementation of `CGD_EDDSL_Magic` is to look at our example plugin in `examples/awesome-plugin`.  It shows a basic installation.
-
 ## Installing
 
 The best way to install is with composer:

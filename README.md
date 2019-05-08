@@ -16,24 +16,28 @@ For example, I have 8 plugins.  Everytime I find a bug in my licensing code, I h
 
 The fastest way to understand implementation of `CGD_EDDSL_Magic` is to look at our example plugin in `examples/awesome-plugin`.  It shows a basic installation.
 
-## Here are the typical steps:
+## Installing
 
+The best way to install is with composer:
+`composer require objectivco/cgd_eddsl_magic`
+
+### Alternative method
 1) Copy or clone CGD_EDDSL_Magic into your plugin project.  Put it in a lib or inc folder.
 
 2)  At the top of your main plugin file, or wherever you do your includes, add some code like:
 
-
 ```php
-if( !class_exists( 'CGD_EDDSL_Magic' ) ) {
+if ( ! class_exists( 'CGD_EDDSL_Magic' ) ) {
 	// load our custom updater
 	include( dirname( __FILE__ ) . '/lib/CGD_EDDSL_Magic/CGD_EDDSL_Magic.php' );
 }
 ```
 
-3) In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`.
+## Instantiating 
+In your plugin constructor (or in the main plugin file if you're not using classes for some reason),  instantiate `CGD_EDDSL_Magic`.
 
 ```php
-$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author, $plugin_file, $theme = false);
+$updater = new CGD_EDDSL_Magic($prefix, $menu_slug,  $host_url, $plugin_version, $plugin_name, $plugin_author, $plugin_file, $theme = false, $beta = false, $home_url = false);
 ```
 
 **Note: The last parameter, `$plugin_file` is technically optional, but it's better to pass it in. This should be the main file for your plugin, the one with the plugin header. If you're in the main plugin file, use `__FILE__`, otherwise, define it as a constant in your main plugin file and pass it in when you instantiate the class.**
@@ -66,8 +70,8 @@ Set to true for theme updates.
 #### $beta
 Set to true to enable beta versions.
 
-#### $deprecated_url
-Before 0.5.0, `home_url()` was used for all license activation checks. For backwards compatibility reasons this defaults to true. For new projects, you should set to false.
+#### $home_url
+Defaults to false. If false, it uses home_url() for activation checks. Otherwise, you can pass in a URL to check.
 
 ---
 
@@ -146,6 +150,8 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 ```
 
 # Changelog
+## Version 0.5.1
+- Ok, that deprecated option was a bad idea. I'm removing it and instead providing the ability to pass in the URL you want to use for activation with a default to `home_url()`
 
 ## Version 0.5.0
 - Add deprecated_url option and default to true. This tells the updater to check `home_url()` for site activation actions instead of `get_site_url()`. New projects should use `get_site_url()`.

@@ -29,7 +29,7 @@ class CGD_EDDSL_Magic {
 	var $plugin_file; // we need to pass this in so it maps to WP
 	var $theme          = false; // do we have a theme or a plugin?
 	var $beta           = false; // is this a beta?
-	var $deprecated_url = true; // use home_url() for license checks instead of get_site_url()
+	var $home_url       = false;
 
 	/**
 	 * Constructor
@@ -44,10 +44,10 @@ class CGD_EDDSL_Magic {
 	 * @param string|bool $plugin_file The plugin file
 	 * @param string|bool $theme True if updating a theme.
 	 * @param string|bool $beta True if beta versions are enabled
-	 * @param string|bool $deprecated_url True if we should use home_url() instead of get_site_url()
+	 * @param string|bool $home_url True if we should use home_url() instead of get_site_url()
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false, $deprecated_url = true ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false, $home_url = false ) {
 		if ( $prefix === false ) {
 			error_log( 'CGD_EDDSL_Magic: No prefix specified. Aborting.' );
 			return;
@@ -57,6 +57,10 @@ class CGD_EDDSL_Magic {
 			error_log( 'CGD_EDDSL_Magic: url, version, plugin file, or name parameter was false. Aborting.' );
 			return;
 		}
+
+		if ( false === $home_url ) {
+		    $this->home_url = get_home_url();
+        }
 
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {
@@ -73,7 +77,6 @@ class CGD_EDDSL_Magic {
 		$this->plugin_file    = $plugin_file;
 		$this->theme          = $theme;
 		$this->beta           = $beta;
-		$this->deprecated_url = $deprecated_url;
 
 		$this->key_statuses = array(
 			'invalid'       => 'The entered license key is not valid.',
@@ -223,7 +226,7 @@ class CGD_EDDSL_Magic {
 					'license'        => $license_key,    // license key (used get_option above to retrieve from DB)
 					'item_name'      => $this->name,     // name of this plugin
 					'author'         => $this->author,    // author of this plugin
-					'url'            => $this->deprecated_url ? home_url() : get_site_url(),
+					'url'            => $this->home_url,
 				)
 			);
 		}
@@ -312,7 +315,7 @@ class CGD_EDDSL_Magic {
 			'edd_action' => $action,
 			'license'    => $this->get_field_value( 'license_key' ),
 			'item_name'  => urlencode( $this->name ), // the name of our product in EDD
-			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
+			'url'        => $this->home_url,
 		);
 
 		// Call the custom API.
@@ -375,7 +378,7 @@ class CGD_EDDSL_Magic {
 			'edd_action' => 'check_license',
 			'license'    => $license,
 			'item_name'  => urlencode( $this->name ),
-			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
+			'url'        => $this->home_url,
 		);
 
 		// Call the custom API.
@@ -526,7 +529,7 @@ class CGD_EDDSL_Magic {
 			'edd_action' => 'check_license',
 			'license'    => $license,
 			'item_name'  => urlencode( $this->name ),
-			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
+			'url'        => $this->home_url,
 		);
 
 		// Call the custom API.
@@ -563,7 +566,7 @@ class CGD_EDDSL_Magic {
 			'edd_action' => 'check_license',
 			'license'    => $license,
 			'item_name'  => urlencode( $this->name ),
-			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
+			'url'        => $this->home_url,
 		);
 
 		// Call the custom API.
@@ -603,7 +606,7 @@ class CGD_EDDSL_Magic {
 			'edd_action' => 'get_license_upgrades',
 			'license'    => $license,
 			'item_name'  => urlencode( $this->name ),
-			'url'        => $this->deprecated_url ? home_url() : get_site_url(),
+			'url'        => $this->home_url,
 		);
 
 		// Call the custom API.

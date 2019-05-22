@@ -60,7 +60,9 @@ class CGD_EDDSL_Magic {
 
 		if ( false === $home_url ) {
 			$this->home_url = get_home_url();
-		}
+		} else {
+		    $this->home_url = $home_url;
+        }
 
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {

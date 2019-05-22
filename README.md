@@ -146,6 +146,9 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 ```
 
 # Changelog
+## Version 0.5.2
+- Fixed bug with setting home url to passed in value.
+
 ## Version 0.5.1
 - Ok, that deprecated option was a bad idea. I'm removing it and instead providing the ability to pass in the URL you want to use for activation with a default to `home_url()`
 

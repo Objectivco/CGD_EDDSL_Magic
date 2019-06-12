@@ -13,7 +13,7 @@ if ( ! class_exists( 'EDD_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.5.2
+ * @version 0.5.3
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -267,7 +267,7 @@ class CGD_EDDSL_Magic {
 								<label for="<?php echo $this->get_field_name( 'license_key' ); ?>">License Key</label>
 							</th>
 							<td>
-								<input type="text" class="regular-text" id="<?php echo $this->get_field_name( 'license_key' ); ?>" name="<?php echo $this->get_field_name( 'license_key' ); ?>" value="<?php echo $this->get_field_value( 'license_key' ); ?>" /><br />
+								<input type="password" class="regular-text" id="<?php echo $this->get_field_name( 'license_key' ); ?>" name="<?php echo $this->get_field_name( 'license_key' ); ?>" value="<?php echo $this->get_field_value( 'license_key' ); ?>" /><br />
 								<span>Your <?php echo $this->name; ?> license key.</span>
 							</td>
 						</tr>

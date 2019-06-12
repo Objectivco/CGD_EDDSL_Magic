@@ -146,6 +146,9 @@ If this does not satisfy you, and you want to add some type of nag to the plugin
 ```
 
 # Changelog
+## Version 0.5.3
+- Change license key field to a password field.
+
 ## Version 0.5.2
 - Fixed bug with setting home url to passed in value.
 

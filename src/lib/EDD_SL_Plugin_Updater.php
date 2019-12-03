@@ -470,7 +470,7 @@ class EDD_SL_Plugin_Updater {
 			'value'   => json_encode( $value )
 		);
 
-		update_option( $cache_key, $data );
+		update_option( $cache_key, $data, false );
 
 	}
 

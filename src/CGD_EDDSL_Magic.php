@@ -1,10 +1,10 @@
 <?php
-if ( ! class_exists( 'EDD_SL_Plugin_Updater' ) ) {
-	include( dirname( __FILE__ ) . '/lib/EDD_SL_Plugin_Updater.php' );
+if ( ! class_exists( 'CGD_EDD_SL_Plugin_Updater' ) ) {
+	include( dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Plugin_Updater.php' );
 }
 
-if ( ! class_exists( 'EDD_Theme_Updater' ) ) {
-	include( dirname( __FILE__ ) . '/lib/EDD_SL_Theme_Updater.php' );
+if ( ! class_exists( 'CGD_EDD_Theme_Updater' ) ) {
+	include( dirname( __FILE__ ) . '/lib/CGDEDD_SL_Theme_Updater.php' );
 }
 
 /**
@@ -13,7 +13,7 @@ if ( ! class_exists( 'EDD_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.6.0
+ * @version 0.6.1
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/
@@ -224,7 +224,7 @@ class CGD_EDDSL_Magic {
 
 		if ( ! $this->theme ) {
 			// setup the updater
-			$edd_updater = new EDD_SL_Plugin_Updater(
+			$edd_updater = new CGD_EDD_SL_Plugin_Updater(
 				$this->url, $this->plugin_file, array(
 					'version'   => $this->version,  // current version number
 					'license'   => $license_key,    // license key (used get_option above to retrieve from DB)
@@ -235,7 +235,7 @@ class CGD_EDDSL_Magic {
 			);
 		} else {
 			// setup the updater
-			$edd_updater = new EDD_Theme_Updater(
+			$edd_updater = new CGD_EDD_Theme_Updater(
 				array(
 					'remote_api_url' => $this->url,
 					'version'        => $this->version,  // current version number

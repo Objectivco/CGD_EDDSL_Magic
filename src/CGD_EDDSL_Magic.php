@@ -24,6 +24,7 @@ class CGD_EDDSL_Magic {
 	var $version; // plugin version for EDD SL
 	var $name; // plugin name for EDD SL
 	var $key_statuses; // store list of key statuses and messages
+	var $bad_key_statuses; // store list of key statuses and messages
 	var $activate_errors; // store list of activation errors and error messages
 	var $last_activation_error; // because we can't pass variables directly to admin_notice
 	var $plugin_file; // we need to pass this in so it maps to WP
@@ -89,6 +90,12 @@ class CGD_EDDSL_Magic {
 			'valid'         => 'Your license key is valid and active for this site.',
 		);
 
+		$this->bad_key_statuses = array(
+		    'expired',
+            'disabled',
+            'invalid'
+        );
+
 		$this->activate_errors = array(
 			'missing'             => 'The provided license key does not seem to exist.',
 			'revoked'             => 'The provided license key has been revoked. Please contact support.',
@@ -110,6 +117,9 @@ class CGD_EDDSL_Magic {
 
 		// Cron action
 		add_action( $this->prefix . '_check_license', array( $this, 'check_license' ) );
+
+		// Delayed license status update
+        add_action( $this->prefix . '_edd_sl_delayed_license_status_update', array( $this, 'delayed_license_update' ) );
 	}
 
 	// Form Saving Stuff
@@ -206,7 +216,11 @@ class CGD_EDDSL_Magic {
 	 */
 	function updater_init() {
 		// retrieve our license key from the DB
-		$license_key = trim( $this->get_field_value( 'license_key' ) );
+		$license_key = $this->get_license_key();
+
+		if ( ! $license_key ) {
+		    return;
+        }
 
 		if ( ! $this->theme ) {
 			// setup the updater
@@ -296,7 +310,6 @@ class CGD_EDDSL_Magic {
 
 				<?php submit_button(); ?>
 			</form>
-
 		</div>
 
 		<?php
@@ -359,6 +372,7 @@ class CGD_EDDSL_Magic {
 		}
 
 		// Set detailed key_status
+        $this->cancel_delayed_license_update();
 		$this->set_field_value( 'key_status', $this->get_license_status() );
 	}
 
@@ -370,9 +384,9 @@ class CGD_EDDSL_Magic {
 	 * @return string The license status
 	 */
 	function get_license_status() {
-		$license = trim( $this->get_field_value( 'license_key' ) );
+		$license = $this->get_license_key();
 
-		if ( empty( $license ) ) {
+		if ( ! $license ) {
 			return;
 		}
 
@@ -510,7 +524,29 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function check_license() {
+	    $current_key_status = $this->get_field_value( 'key_status' );
+	    $new_status         = $this->get_license_status();
+
+	    // If doing cron and the key is currently valid and the new status is invalid, add 3 day delay to updating to prevent immediate deactivation
+	    if ( defined( 'DOING_CRON' ) && 'valid' === $current_key_status && in_array( $new_status, $this->bad_key_statuses, true ) ) {
+	        if ( ! wp_next_scheduled( $this->prefix . '_edd_sl_delayed_license_status_update' ) ) {
+		        wp_schedule_single_event( time() + ( DAY_IN_SECONDS * 3 ), $this->prefix . '_edd_sl_delayed_license_status_update' );
+	        }
+	    } else {
+		    $this->cancel_delayed_license_update();
+		    $this->set_field_value( 'key_status', $new_status );
+	    }
+	}
+
+	/**
+	 * Update the key status to the current status
+	 */
+	function delayed_license_update() {
 		$this->set_field_value( 'key_status', $this->get_license_status() );
+	}
+
+	function cancel_delayed_license_update() {
+		wp_clear_scheduled_hook( $this->prefix . '_edd_sl_delayed_license_status_update' );
 	}
 
 	/**
@@ -518,13 +554,13 @@ class CGD_EDDSL_Magic {
 	 * Retrieve license data for current site.
 	 *
 	 * @access public
-	 * @return stdClass License data
+	 * @return bool|stdClass License data
 	 */
 	function get_license_data() {
-		$license = trim( $this->get_field_value( 'license_key' ) );
+		$license = $this->get_license_key();
 
-		if ( empty( $license ) ) {
-			return;
+		if ( ! $license ) {
+			return false;
 		}
 
 		$api_params = array(
@@ -546,9 +582,7 @@ class CGD_EDDSL_Magic {
 			return false;
 		}
 
-		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
-
-		return $license_data;
+		return json_decode( wp_remote_retrieve_body( $response ) );
 	}
 
 	/**
@@ -558,9 +592,9 @@ class CGD_EDDSL_Magic {
 	 * @return int The license activation limit
 	 */
 	function get_license_activation_limit() {
-		$license = trim( $this->get_field_value( 'license_key' ) );
+		$license = $this->get_license_key();
 
-		if ( empty( $license ) ) {
+		if ( ! $license ) {
 			return 0;
 		}
 
@@ -629,6 +663,21 @@ class CGD_EDDSL_Magic {
 		}
 
 		return $upgrades;
+	}
+
+	/**
+     * Get trimmed license key
+     *
+	 * @return bool|string
+	 */
+	function get_license_key() {
+		$license = trim( $this->get_field_value( 'license_key' ) );
+
+		if ( ! empty( $license ) ) {
+		    return $license;
+		}
+
+		return false;
 	}
 
 }

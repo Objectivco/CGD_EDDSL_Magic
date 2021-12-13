@@ -6,7 +6,7 @@
  * @version 1.0.3
  */
 
-class CGD_EDD_Theme_Updater {
+class CGD_EDD_SL_Theme_Updater {
 
 	private $remote_api_url;
 	private $request_data;
@@ -51,11 +51,11 @@ class CGD_EDD_Theme_Updater {
 		$this->strings        = $strings;
 		$this->item_id        = $args['item_id'];
 
-		add_filter( 'site_transient_update_themes',        array( $this, 'theme_update_transient' ) );
+		add_filter( 'site_transient_update_themes', array( $this, 'theme_update_transient' ) );
 		add_filter( 'delete_site_transient_update_themes', array( $this, 'delete_theme_update_transient' ) );
-		add_action( 'load-update-core.php',                array( $this, 'delete_theme_update_transient' ) );
-		add_action( 'load-themes.php',                     array( $this, 'delete_theme_update_transient' ) );
-		add_action( 'load-themes.php',                     array( $this, 'load_themes_screen' ) );
+		add_action( 'load-update-core.php', array( $this, 'delete_theme_update_transient' ) );
+		add_action( 'load-themes.php', array( $this, 'delete_theme_update_transient' ) );
+		add_action( 'load-themes.php', array( $this, 'load_themes_screen' ) );
 	}
 
 	/**
@@ -157,7 +157,13 @@ class CGD_EDD_Theme_Updater {
 				'item_id'    => $this->item_id,
 			);
 
-			$response = wp_remote_post( $this->remote_api_url, array( 'timeout' => 15, 'body' => $api_params ) );
+			$response = wp_remote_post(
+				$this->remote_api_url,
+				array(
+					'timeout' => 15,
+					'body'    => $api_params,
+				)
+			);
 
 			// Make sure the response was successful
 			if ( is_wp_error( $response ) || 200 != wp_remote_retrieve_response_code( $response ) ) {
@@ -172,7 +178,7 @@ class CGD_EDD_Theme_Updater {
 
 			// If the response failed, try again in 30 minutes
 			if ( $failed ) {
-				$data = new stdClass;
+				$data              = new stdClass();
 				$data->new_version = $this->version;
 				set_transient( $this->response_key, $data, strtotime( '+30 minutes', time() ) );
 				return false;

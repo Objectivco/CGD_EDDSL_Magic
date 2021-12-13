@@ -3,7 +3,7 @@ if ( ! class_exists( 'CGD_EDD_SL_Plugin_Updater' ) ) {
 	include dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Plugin_Updater.php';
 }
 
-if ( ! class_exists( 'CGD_EDD_Theme_Updater' ) ) {
+if ( ! class_exists( 'CGD_EDD_SL_Theme_Updater' ) ) {
 	include dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Theme_Updater.php';
 }
 

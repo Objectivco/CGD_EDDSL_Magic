@@ -48,7 +48,7 @@ class CGD_EDDSL_Magic {
 	 * @param string|bool $home_url True if we should use home_url() instead of get_site_url()
 	 * @return void
 	 */
-	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author, $plugin_file = false, $theme = false, $beta = false, $home_url = false ) {
+	public function __construct( $prefix = false, $menu_slug = false, $url = false, $version = false, $name = false, $author = null, $plugin_file = false, $theme = false, $beta = false, $home_url = false ) {
 		if ( $prefix === false ) {
 			error_log( 'CGD_EDDSL_Magic: No prefix specified. Aborting.' );
 			return;
@@ -174,7 +174,7 @@ class CGD_EDDSL_Magic {
 	 * @param mixed  $value
 	 * @return void
 	 */
-	public function set_field_value( $setting = false, $value ) {
+	public function set_field_value( $setting = false, $value = null ) {
 		if ( $setting === false ) {
 			return false;
 		}

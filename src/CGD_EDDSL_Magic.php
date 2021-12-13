@@ -1,10 +1,10 @@
 <?php
 if ( ! class_exists( 'CGD_EDD_SL_Plugin_Updater' ) ) {
-	include( dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Plugin_Updater.php' );
+	include dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Plugin_Updater.php';
 }
 
 if ( ! class_exists( 'CGD_EDD_Theme_Updater' ) ) {
-	include( dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Theme_Updater.php' );
+	include dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Theme_Updater.php';
 }
 
 /**
@@ -41,7 +41,7 @@ class CGD_EDDSL_Magic {
 	 * @param string|bool $url The URL of your host site (default: false)
 	 * @param string|bool $version The plugin version (default: false)
 	 * @param string|bool $name The plugin name (default: false)
-	 * @param string $author The author of the plugin.
+	 * @param string      $author The author of the plugin.
 	 * @param string|bool $plugin_file The plugin file
 	 * @param string|bool $theme True if updating a theme.
 	 * @param string|bool $beta True if beta versions are enabled
@@ -62,8 +62,8 @@ class CGD_EDDSL_Magic {
 		if ( false === $home_url ) {
 			$this->home_url = get_home_url();
 		} else {
-		    $this->home_url = $home_url;
-        }
+			$this->home_url = $home_url;
+		}
 
 		// Try to figure out plugin file if not provided
 		if ( $plugin_file === false ) {
@@ -91,10 +91,10 @@ class CGD_EDDSL_Magic {
 		);
 
 		$this->bad_key_statuses = array(
-		    'expired',
-            'disabled',
-            'invalid'
-        );
+			'expired',
+			'disabled',
+			'invalid',
+		);
 
 		$this->activate_errors = array(
 			'missing'             => 'The provided license key does not seem to exist.',
@@ -119,7 +119,7 @@ class CGD_EDDSL_Magic {
 		add_action( $this->prefix . '_check_license', array( $this, 'check_license' ) );
 
 		// Delayed license status update
-        add_action( $this->prefix . '_edd_sl_delayed_license_status_update', array( $this, 'delayed_license_update' ) );
+		add_action( $this->prefix . '_edd_sl_delayed_license_status_update', array( $this, 'delayed_license_update' ) );
 	}
 
 	// Form Saving Stuff
@@ -171,7 +171,7 @@ class CGD_EDDSL_Magic {
 	 *
 	 * @access public
 	 * @param string $setting (default: false)
-	 * @param mixed $value
+	 * @param mixed  $value
 	 * @return void
 	 */
 	public function set_field_value( $setting = false, $value ) {
@@ -219,13 +219,15 @@ class CGD_EDDSL_Magic {
 		$license_key = $this->get_license_key();
 
 		if ( ! $license_key ) {
-		    return;
-        }
+			return;
+		}
 
 		if ( ! $this->theme ) {
 			// setup the updater
 			$edd_updater = new CGD_EDD_SL_Plugin_Updater(
-				$this->url, $this->plugin_file, array(
+				$this->url,
+				$this->plugin_file,
+				array(
 					'version'   => $this->version,  // current version number
 					'license'   => $license_key,    // license key (used get_option above to retrieve from DB)
 					'item_name' => $this->name,     // name of this plugin
@@ -335,7 +337,8 @@ class CGD_EDDSL_Magic {
 
 		// Call the custom API.
 		$response = wp_remote_get(
-			add_query_arg( $api_params, $this->url ), array(
+			add_query_arg( $api_params, $this->url ),
+			array(
 				'timeout'   => 15,
 				'sslverify' => false,
 			)
@@ -372,7 +375,7 @@ class CGD_EDDSL_Magic {
 		}
 
 		// Set detailed key_status
-        $this->cancel_delayed_license_update();
+		$this->cancel_delayed_license_update();
 		$this->set_field_value( 'key_status', $this->get_license_status() );
 	}
 
@@ -399,7 +402,8 @@ class CGD_EDDSL_Magic {
 
 		// Call the custom API.
 		$response = wp_remote_get(
-			add_query_arg( $api_params, $this->url ), array(
+			add_query_arg( $api_params, $this->url ),
+			array(
 				'timeout'   => 15,
 				'sslverify' => false,
 			)
@@ -524,18 +528,18 @@ class CGD_EDDSL_Magic {
 	 * @return void
 	 */
 	function check_license() {
-	    $current_key_status = $this->get_field_value( 'key_status' );
-	    $new_status         = $this->get_license_status();
+		$current_key_status = $this->get_field_value( 'key_status' );
+		$new_status         = $this->get_license_status();
 
-	    // If doing cron and the key is currently valid and the new status is invalid, add 3 day delay to updating to prevent immediate deactivation
-	    if ( defined( 'DOING_CRON' ) && 'valid' === $current_key_status && in_array( $new_status, $this->bad_key_statuses, true ) ) {
-	        if ( ! wp_next_scheduled( $this->prefix . '_edd_sl_delayed_license_status_update' ) ) {
-		        wp_schedule_single_event( time() + ( DAY_IN_SECONDS * 3 ), $this->prefix . '_edd_sl_delayed_license_status_update' );
-	        }
-	    } else {
-		    $this->cancel_delayed_license_update();
-		    $this->set_field_value( 'key_status', $new_status );
-	    }
+		// If doing cron and the key is currently valid and the new status is invalid, add 3 day delay to updating to prevent immediate deactivation
+		if ( defined( 'DOING_CRON' ) && 'valid' === $current_key_status && in_array( $new_status, $this->bad_key_statuses, true ) ) {
+			if ( ! wp_next_scheduled( $this->prefix . '_edd_sl_delayed_license_status_update' ) ) {
+				wp_schedule_single_event( time() + ( DAY_IN_SECONDS * 3 ), $this->prefix . '_edd_sl_delayed_license_status_update' );
+			}
+		} else {
+			$this->cancel_delayed_license_update();
+			$this->set_field_value( 'key_status', $new_status );
+		}
 	}
 
 	/**
@@ -572,7 +576,8 @@ class CGD_EDDSL_Magic {
 
 		// Call the custom API.
 		$response = wp_remote_get(
-			add_query_arg( $api_params, $this->url ), array(
+			add_query_arg( $api_params, $this->url ),
+			array(
 				'timeout'   => 15,
 				'sslverify' => false,
 			)
@@ -607,7 +612,8 @@ class CGD_EDDSL_Magic {
 
 		// Call the custom API.
 		$response = wp_remote_get(
-			add_query_arg( $api_params, $this->url ), array(
+			add_query_arg( $api_params, $this->url ),
+			array(
 				'timeout'   => 15,
 				'sslverify' => false,
 			)
@@ -647,7 +653,8 @@ class CGD_EDDSL_Magic {
 
 		// Call the custom API.
 		$response = wp_remote_get(
-			add_query_arg( $api_params, $this->url ), array(
+			add_query_arg( $api_params, $this->url ),
+			array(
 				'timeout'   => 15,
 				'sslverify' => false,
 			)
@@ -666,15 +673,15 @@ class CGD_EDDSL_Magic {
 	}
 
 	/**
-     * Get trimmed license key
-     *
+	 * Get trimmed license key
+	 *
 	 * @return bool|string
 	 */
 	function get_license_key() {
 		$license = trim( $this->get_field_value( 'license_key' ) );
 
 		if ( ! empty( $license ) ) {
-		    return $license;
+			return $license;
 		}
 
 		return false;

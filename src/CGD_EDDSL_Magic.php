@@ -13,7 +13,7 @@ if ( ! class_exists( 'CGD_EDD_SL_Theme_Updater' ) ) {
  * A drop-in class that magically manages your EDD SL plugin licensing.
  *
  * @author Clifton H. Griffin II
- * @version 0.6.1
+ * @version 0.7.0
  * @copyright Clif Griffin Development, Inc. 2014
  * @license GNU GPL version 3 (or later) {@see license.txt}
  **/

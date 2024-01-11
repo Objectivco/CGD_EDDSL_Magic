@@ -23,6 +23,7 @@ class CGD_EDDSL_Magic {
 	var $url; // plugin host site URL for EDD SL
 	var $version; // plugin version for EDD SL
 	var $name; // plugin name for EDD SL
+	var $author; // plugin author for EDD SL
 	var $key_statuses; // store list of key statuses and messages
 	var $bad_key_statuses; // store list of key statuses and messages
 	var $activate_errors; // store list of activation errors and error messages

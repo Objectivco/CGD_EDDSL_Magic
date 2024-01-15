@@ -17,6 +17,11 @@ class CGD_EDD_SL_Theme_Updater
     private $version;
     private $author;
     protected $strings = null;
+    private $license;
+    private $item_name;
+    private $beta;
+    private $item_id;
+
 
 
     /**
@@ -25,11 +30,11 @@ class CGD_EDD_SL_Theme_Updater
      * @param array $args    Array of arguments from the theme requesting an update check
      * @param array $strings Strings for the update process
      */
-    function __construct($args = array(), $strings = array())
+    public function __construct($args = array(), $strings = array())
     {
 
         $defaults = array(
-            'remote_api_url' => 'http://easydigitaldownloads.com',
+            'remote_api_url' => 'https://easydigitaldownloads.com',
             'request_data'   => array(),
             'theme_slug'     => get_template(), // use get_stylesheet() for child theme updates
             'item_name'      => '',
@@ -53,7 +58,7 @@ class CGD_EDD_SL_Theme_Updater
         $this->strings        = $strings;
         $this->item_id        = $args['item_id'];
 
-        add_filter('site_transient_update_themes', array( $this, 'theme_update_transient' ));
+        add_filter('pre_set_site_transient_update_themes', array( $this, 'theme_update_transient' ));
         add_filter('delete_site_transient_update_themes', array( $this, 'delete_theme_update_transient' ));
         add_action('load-update-core.php', array( $this, 'delete_theme_update_transient' ));
         add_action('load-themes.php', array( $this, 'delete_theme_update_transient' ));
@@ -61,11 +66,11 @@ class CGD_EDD_SL_Theme_Updater
     }
 
     /**
-     * Show the update notification when neecessary
+     * Show the update notification when necessary
      *
      * @return void
      */
-    function load_themes_screen()
+    public function load_themes_screen()
     {
         add_thickbox();
         add_action('admin_notices', array( $this, 'update_nag' ));
@@ -76,7 +81,7 @@ class CGD_EDD_SL_Theme_Updater
      *
      * @return void
      */
-    function update_nag()
+    public function update_nag()
     {
 
         $strings      = $this->strings;
@@ -102,7 +107,7 @@ class CGD_EDD_SL_Theme_Updater
                 $update_onclick
             );
             echo '</div>';
-            echo '<div id="' . $this->theme_slug . '_' . 'changelog" style="display:none;">';
+            echo '<div id="' . esc_attr($this->theme_slug . '_changelog') . '" style="display:none;">';
             echo wpautop($api_response->sections['changelog']);
             echo '</div>';
         }
@@ -111,19 +116,28 @@ class CGD_EDD_SL_Theme_Updater
     /**
      * Update the theme update transient with the response from the version check
      *
-     * @param  array $value   The default update values.
-     * @return array|boolean  If an update is available, returns the update parameters, if no update is needed returns false, if
+     * @param  object $value   The default update values.
+     * @return object|boolean  If an update is available, returns the update parameters, if no update is needed returns false, if
      *                        the request fails returns false.
      */
-    function theme_update_transient($value)
+    public function theme_update_transient($value)
     {
         $update_data = $this->check_for_update();
         if ($update_data) {
+            if (! is_object($value)) {
+                $value = new stdClass;
+            }
+
             // Make sure the theme property is set. See issue 1463 on Github in the Software Licensing Repo.
             $update_data['theme'] = $this->theme_slug;
 
-            $value->response[ $this->theme_slug ] = $update_data;
+            if (version_compare($this->version, $update_data['new_version'], '<')) {
+                $value->response[ $this->theme_slug ] = $update_data;
+            } else {
+                $value->no_update[ $this->theme_slug ] = $update_data;
+            }
         }
+
         return $value;
     }
 
@@ -132,7 +146,7 @@ class CGD_EDD_SL_Theme_Updater
      *
      * @return void
      */
-    function delete_theme_update_transient()
+    public function delete_theme_update_transient()
     {
         delete_transient($this->response_key);
     }
@@ -143,7 +157,7 @@ class CGD_EDD_SL_Theme_Updater
      * @return array|boolean  If an update is available, returns the update parameters, if no update is needed returns false, if
      *                        the request fails returns false.
      */
-    function check_for_update()
+    private function check_for_update()
     {
 
         $update_data = get_transient($this->response_key);
@@ -152,14 +166,16 @@ class CGD_EDD_SL_Theme_Updater
             $failed = false;
 
             $api_params = array(
-                'edd_action' => 'get_version',
-                'license'    => $this->license,
-                'name'       => $this->item_name,
-                'slug'       => $this->theme_slug,
-                'version'    => $this->version,
-                'author'     => $this->author,
-                'beta'       => $this->beta,
-                'item_id'    => $this->item_id,
+                'edd_action'  => 'get_version',
+                'license'     => $this->license,
+                'name'        => $this->item_name,
+                'slug'        => $this->theme_slug,
+                'version'     => $this->version,
+                'author'      => $this->author,
+                'beta'        => $this->beta,
+                'item_id'     => $this->item_id,
+                'php_version' => phpversion(),
+                'wp_version'  => get_bloginfo('version'),
             );
 
             $response = wp_remote_post(
@@ -171,7 +187,7 @@ class CGD_EDD_SL_Theme_Updater
             );
 
             // Make sure the response was successful
-            if (is_wp_error($response) || 200 != wp_remote_retrieve_response_code($response)) {
+            if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
                 $failed = true;
             }
 
@@ -194,10 +210,6 @@ class CGD_EDD_SL_Theme_Updater
                 $update_data->sections = maybe_unserialize($update_data->sections);
                 set_transient($this->response_key, $update_data, strtotime('+12 hours', time()));
             }
-        }
-
-        if (version_compare($this->version, $update_data->new_version, '>=')) {
-            return false;
         }
 
         return (array) $update_data;

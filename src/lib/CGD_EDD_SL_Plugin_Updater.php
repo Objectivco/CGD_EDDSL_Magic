@@ -9,19 +9,19 @@ if (! defined('ABSPATH')) {
  * Allows plugins to use their own update API.
  *
  * @author Easy Digital Downloads
- * @version 1.9.1
+ * @version 1.9.2
  */
 class CGD_EDD_SL_Plugin_Updater
 {
 
-    private $api_url     = '';
-    private $api_data    = array();
-    private $plugin_file = '';
-    private $name        = '';
-    private $slug        = '';
-    private $version     = '';
-    private $wp_override = false;
-    private $beta        = false;
+    private $api_url              = '';
+    private $api_data             = array();
+    private $plugin_file          = '';
+    private $name                 = '';
+    private $slug                 = '';
+    private $version              = '';
+    private $wp_override          = false;
+    private $beta                 = false;
     private $failed_request_cache_key;
 
     /**
@@ -30,9 +30,9 @@ class CGD_EDD_SL_Plugin_Updater
      * @uses plugin_basename()
      * @uses hook()
      *
-     * @param string $_api_url     The URL pointing to the custom API endpoint.
-     * @param string $_plugin_file Path to the plugin file.
-     * @param array  $_api_data    Optional data to send with API calls.
+     * @param string  $_api_url     The URL pointing to the custom API endpoint.
+     * @param string  $_plugin_file Path to the plugin file.
+     * @param array   $_api_data    Optional data to send with API calls.
      */
     public function __construct($_api_url, $_plugin_file, $_api_data = null)
     {
@@ -90,7 +90,7 @@ class CGD_EDD_SL_Plugin_Updater
      *
      * @uses api_request()
      *
-     * @param array $_transient_data Update array build by WordPress.
+     * @param array   $_transient_data Update array build by WordPress.
      * @return array Modified update array with custom plugin data.
      */
     public function check_update($_transient_data)
@@ -146,6 +146,7 @@ class CGD_EDD_SL_Plugin_Updater
             // This is required for your plugin to support auto-updates in WordPress 5.5.
             $version_info->plugin = $this->name;
             $version_info->id     = $this->name;
+            $version_info->tested = $this->get_tested_version($version_info);
 
             $this->set_version_info_cache($version_info);
         }
@@ -154,10 +155,43 @@ class CGD_EDD_SL_Plugin_Updater
     }
 
     /**
+     * Gets the plugin's tested version.
+     *
+     * @since 1.9.2
+     * @param object $version_info
+     * @return null|string
+     */
+    private function get_tested_version($version_info)
+    {
+
+        // There is no tested version.
+        if (empty($version_info->tested)) {
+            return null;
+        }
+
+        // Strip off extra version data so the result is x.y or x.y.z.
+        list( $current_wp_version ) = explode('-', get_bloginfo('version'));
+
+        // The tested version is greater than or equal to the current WP version, no need to do anything.
+        if (version_compare($version_info->tested, $current_wp_version, '>=')) {
+            return $version_info->tested;
+        }
+        $current_version_parts = explode('.', $current_wp_version);
+        $tested_parts          = explode('.', $version_info->tested);
+
+        // The current WordPress version is x.y.z, so update the tested version to match it.
+        if (isset($current_version_parts[2]) && $current_version_parts[0] === $tested_parts[0] && $current_version_parts[1] === $tested_parts[1]) {
+            $tested_parts[2] = $current_version_parts[2];
+        }
+
+        return implode('.', $tested_parts);
+    }
+
+    /**
      * Show the update notification on multisite subsites.
      *
-     * @param string $file
-     * @param array  $plugin
+     * @param string  $file
+     * @param array   $plugin
      */
     public function show_update_notification($file, $plugin)
     {
@@ -283,9 +317,9 @@ class CGD_EDD_SL_Plugin_Updater
      *
      * @uses api_request()
      *
-     * @param mixed  $_data
-     * @param string $_action
-     * @param object $_args
+     * @param mixed   $_data
+     * @param string  $_action
+     * @param object  $_args
      * @return object $_data
      */
     public function plugins_api_filter($_data, $_action = '', $_args = null)
@@ -312,7 +346,7 @@ class CGD_EDD_SL_Plugin_Updater
         // Get the transient where we store the api request for this plugin for 24 hours
         $edd_api_request_transient = $this->get_cached_version_info();
 
-        // If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
+        //If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
         if (empty($edd_api_request_transient)) {
             $api_response = $this->api_request('plugin_information', $to_send);
 
@@ -381,8 +415,8 @@ class CGD_EDD_SL_Plugin_Updater
     /**
      * Disable SSL verification in order to prevent download update failures
      *
-     * @param array  $args
-     * @param string $url
+     * @param array   $args
+     * @param string  $url
      * @return object $array
      */
     public function http_request_args($args, $url)
@@ -401,8 +435,8 @@ class CGD_EDD_SL_Plugin_Updater
      * @uses wp_remote_post()
      * @uses is_wp_error()
      *
-     * @param string $_action The requested action.
-     * @param array  $_data   Parameters for the API action.
+     * @param string  $_action The requested action.
+     * @param array   $_data   Parameters for the API action.
      * @return false|object|void
      */
     private function api_request($_action, $_data)

@@ -49,7 +49,7 @@ class CGD_EDD_SL_Plugin_Updater
         $this->beta                     = ! empty($this->api_data['beta']) ? true : false;
         $this->failed_request_cache_key = 'edd_sl_failed_http_' . md5($this->api_url);
 
-        $edd_plugin_data[ $this->slug ] = $this->api_data;
+        $edd_plugin_data[$this->slug] = $this->api_data;
 
         /**
          * Fires after the $edd_plugin_data is setup.
@@ -74,10 +74,10 @@ class CGD_EDD_SL_Plugin_Updater
     public function init()
     {
 
-        add_filter('pre_set_site_transient_update_plugins', array( $this, 'check_update' ));
-        add_filter('plugins_api', array( $this, 'plugins_api_filter' ), 10, 3);
-        add_action('after_plugin_row', array( $this, 'show_update_notification' ), 10, 2);
-        add_action('admin_init', array( $this, 'show_changelog' ));
+        add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
+        add_filter('plugins_api', array($this, 'plugins_api_filter'), 10, 3);
+        add_action('after_plugin_row', array($this, 'show_update_notification'), 10, 2);
+        add_action('admin_init', array($this, 'show_changelog'));
     }
 
     /**
@@ -102,21 +102,21 @@ class CGD_EDD_SL_Plugin_Updater
             $_transient_data = new stdClass();
         }
 
-        if (! empty($_transient_data->response) && ! empty($_transient_data->response[ $this->name ]) && false === $this->wp_override) {
+        if (! empty($_transient_data->response) && ! empty($_transient_data->response[$this->name]) && false === $this->wp_override) {
             return $_transient_data;
         }
 
         $current = $this->get_repo_api_data();
         if (false !== $current && is_object($current) && isset($current->new_version)) {
             if (version_compare($this->version, $current->new_version, '<')) {
-                $_transient_data->response[ $this->name ] = $current;
+                $_transient_data->response[$this->name] = $current;
             } else {
                 // Populating the no_update information is required to support auto-updates in WordPress 5.5.
-                $_transient_data->no_update[ $this->name ] = $current;
+                $_transient_data->no_update[$this->name] = $current;
             }
         }
         $_transient_data->last_checked           = time();
-        $_transient_data->checked[ $this->name ] = $this->version;
+        $_transient_data->checked[$this->name] = $this->version;
 
         return $_transient_data;
     }
@@ -170,7 +170,7 @@ class CGD_EDD_SL_Plugin_Updater
         }
 
         // Strip off extra version data so the result is x.y or x.y.z.
-        list( $current_wp_version ) = explode('-', get_bloginfo('version'));
+        list($current_wp_version) = explode('-', get_bloginfo('version'));
 
         // The tested version is greater than or equal to the current WP version, no need to do anything.
         if (version_compare($version_info->tested, $current_wp_version, '>=')) {
@@ -213,15 +213,15 @@ class CGD_EDD_SL_Plugin_Updater
         // Do not print any message if update does not exist.
         $update_cache = get_site_transient('update_plugins');
 
-        if (! isset($update_cache->response[ $this->name ])) {
+        if (! isset($update_cache->response[$this->name])) {
             if (! is_object($update_cache)) {
                 $update_cache = new stdClass();
             }
-            $update_cache->response[ $this->name ] = $this->get_repo_api_data();
+            $update_cache->response[$this->name] = $this->get_repo_api_data();
         }
 
         // Return early if this plugin isn't in the transient->response or if the site is running the current or newer version of the plugin.
-        if (empty($update_cache->response[ $this->name ]) || version_compare($this->version, $update_cache->response[ $this->name ]->new_version, '>=')) {
+        if (empty($update_cache->response[$this->name]) || version_compare($this->version, $update_cache->response[$this->name]->new_version, '>=')) {
             return;
         }
 
@@ -236,7 +236,7 @@ class CGD_EDD_SL_Plugin_Updater
         echo '<div class="update-message notice inline notice-warning notice-alt"><p>';
 
         $changelog_link = '';
-        if (! empty($update_cache->response[ $this->name ]->sections->changelog)) {
+        if (! empty($update_cache->response[$this->name]->sections->changelog)) {
             $changelog_link = add_query_arg(
                 array(
                     'edd_sl_action' => 'view_plugin_changelog',
@@ -266,13 +266,13 @@ class CGD_EDD_SL_Plugin_Updater
         if (! current_user_can('update_plugins')) {
             echo ' ';
             esc_html_e('Contact your network administrator to install the update.', 'easy-digital-downloads');
-        } elseif (empty($update_cache->response[ $this->name ]->package) && ! empty($changelog_link)) {
+        } elseif (empty($update_cache->response[$this->name]->package) && ! empty($changelog_link)) {
             echo ' ';
             printf(
                 /* translators: 1. opening anchor tag, do not translate 2. the new plugin version 3. closing anchor tag, do not translate. */
                 __('%1$sView version %2$s details%3$s.', 'easy-digital-downloads'),
                 '<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url($changelog_link) . '">',
-                esc_html($update_cache->response[ $this->name ]->new_version),
+                esc_html($update_cache->response[$this->name]->new_version),
                 '</a>'
             );
         } elseif (! empty($changelog_link)) {
@@ -280,7 +280,7 @@ class CGD_EDD_SL_Plugin_Updater
             printf(
                 __('%1$sView version %2$s details%3$s or %4$supdate now%5$s.', 'easy-digital-downloads'),
                 '<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url($changelog_link) . '">',
-                esc_html($update_cache->response[ $this->name ]->new_version),
+                esc_html($update_cache->response[$this->name]->new_version),
                 '</a>',
                 '<a target="_blank" class="update-link" href="' . esc_url(wp_nonce_url($update_link, 'upgrade-plugin_' . $file)) . '">',
                 '</a>'
@@ -329,7 +329,7 @@ class CGD_EDD_SL_Plugin_Updater
             return $_data;
         }
 
-        if (! isset($_args->slug) || ( $_args->slug !== $this->slug )) {
+        if (! isset($_args->slug) || ($_args->slug !== $this->slug)) {
             return $_data;
         }
 
@@ -406,7 +406,7 @@ class CGD_EDD_SL_Plugin_Updater
         }
         $new_data = array();
         foreach ($data as $key => $value) {
-            $new_data[ $key ] = is_object($value) ? $this->convert_object_to_array($value) : $value;
+            $new_data[$key] = is_object($value) ? $this->convert_object_to_array($value) : $value;
         }
 
         return $new_data;
@@ -523,7 +523,7 @@ class CGD_EDD_SL_Plugin_Updater
         }
 
         if (! current_user_can('update_plugins')) {
-            wp_die(esc_html__('You do not have permission to install plugin updates', 'easy-digital-downloads'), esc_html__('Error', 'easy-digital-downloads'), array( 'response' => 403 ));
+            wp_die(esc_html__('You do not have permission to install plugin updates', 'easy-digital-downloads'), esc_html__('Error', 'easy-digital-downloads'), array('response' => 403));
         }
 
         $version_info = $this->get_repo_api_data();
@@ -576,7 +576,7 @@ class CGD_EDD_SL_Plugin_Updater
             )
         );
 
-        if (is_wp_error($request) || ( 200 !== wp_remote_retrieve_response_code($request) )) {
+        if (is_wp_error($request) || (200 !== wp_remote_retrieve_response_code($request))) {
             $this->log_failed_request();
 
             return false;

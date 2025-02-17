@@ -4,7 +4,7 @@
  * Theme updater class.
  *
  * @package EDD Sample Theme
- * @version 1.0.3
+ * @version 1.2.0
  */
 
 class CGD_EDD_SL_Theme_Updater
@@ -97,6 +97,7 @@ class CGD_EDD_SL_Theme_Updater
         $update_onclick = ' onclick="if ( confirm(\'' . esc_js($strings['update-notice']) . '\') ) {return true;}return false;"';
 
         if (version_compare($this->version, $api_response->new_version, '<')) {
+
             echo '<div id="update-nag">';
             printf(
                 $strings['update-available'],
@@ -125,6 +126,7 @@ class CGD_EDD_SL_Theme_Updater
     {
         $update_data = $this->check_for_update();
         if ($update_data) {
+
             if (! is_object($value)) {
                 $value = new stdClass;
             }

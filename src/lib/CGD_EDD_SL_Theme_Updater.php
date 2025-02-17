@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Theme updater class.
  *
@@ -58,11 +59,11 @@ class CGD_EDD_SL_Theme_Updater
         $this->strings        = $strings;
         $this->item_id        = $args['item_id'];
 
-        add_filter('pre_set_site_transient_update_themes', array( $this, 'theme_update_transient' ));
-        add_filter('delete_site_transient_update_themes', array( $this, 'delete_theme_update_transient' ));
-        add_action('load-update-core.php', array( $this, 'delete_theme_update_transient' ));
-        add_action('load-themes.php', array( $this, 'delete_theme_update_transient' ));
-        add_action('load-themes.php', array( $this, 'load_themes_screen' ));
+        add_filter('pre_set_site_transient_update_themes', array($this, 'theme_update_transient'));
+        add_filter('delete_site_transient_update_themes', array($this, 'delete_theme_update_transient'));
+        add_action('load-update-core.php', array($this, 'delete_theme_update_transient'));
+        add_action('load-themes.php', array($this, 'delete_theme_update_transient'));
+        add_action('load-themes.php', array($this, 'load_themes_screen'));
     }
 
     /**
@@ -73,7 +74,7 @@ class CGD_EDD_SL_Theme_Updater
     public function load_themes_screen()
     {
         add_thickbox();
-        add_action('admin_notices', array( $this, 'update_nag' ));
+        add_action('admin_notices', array($this, 'update_nag'));
     }
 
     /**
@@ -132,9 +133,9 @@ class CGD_EDD_SL_Theme_Updater
             $update_data['theme'] = $this->theme_slug;
 
             if (version_compare($this->version, $update_data['new_version'], '<')) {
-                $value->response[ $this->theme_slug ] = $update_data;
+                $value->response[$this->theme_slug] = $update_data;
             } else {
-                $value->no_update[ $this->theme_slug ] = $update_data;
+                $value->no_update[$this->theme_slug] = $update_data;
             }
         }
 

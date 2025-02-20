@@ -111,7 +111,6 @@ class CGD_EDD_Remote_Request
             array(
                 'timeout'            => 15,
                 'sslverify'          => true,
-                'user-agent'         => $this->get_user_agent(),
                 'reject_unsafe_urls' => true,
             )
         );
@@ -174,23 +173,5 @@ class CGD_EDD_Remote_Request
         }
 
         return $this->code;
-    }
-
-    /**
-     * Gets the default user agent string.
-     *
-     * @since 3.3.5
-     * @return string
-     */
-    private function get_user_agent()
-    {
-        $edd        = edd_is_pro() ? 'EDDPro/' : 'EDD/';
-        $user_agent = array(
-            'WordPress/' . get_bloginfo('version'),
-            $edd . EDD_VERSION,
-            get_bloginfo('url'),
-        );
-
-        return implode('; ', $user_agent);
     }
 }

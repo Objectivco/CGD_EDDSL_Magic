@@ -608,7 +608,7 @@ class CGD_EDD_SL_Plugin_Updater
          */
         $api_params = apply_filters('edd_sl_plugin_updater_api_params', $api_params, $this->api_data, $this->plugin_file);
 
-        $request = new \EDD\Utils\RemoteRequest(
+        $request = new CGD_EDD_Remote_Request(
             $this->api_url,
             array(
                 'timeout'   => 15,

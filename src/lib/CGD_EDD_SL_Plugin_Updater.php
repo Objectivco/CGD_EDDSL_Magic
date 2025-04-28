@@ -1,6 +1,6 @@
 <?php
 
-// Exit if accessed directly.
+// Exit if accessed directly
 if (! defined('ABSPATH')) {
     exit;
 }
@@ -30,9 +30,9 @@ class CGD_EDD_SL_Plugin_Updater
      * @uses plugin_basename()
      * @uses hook()
      *
-     * @param string $_api_url     The URL pointing to the custom API endpoint.
-     * @param string $_plugin_file Path to the plugin file.
-     * @param array  $_api_data    Optional data to send with API calls.
+     * @param string  $_api_url     The URL pointing to the custom API endpoint.
+     * @param string  $_plugin_file Path to the plugin file.
+     * @param array   $_api_data    Optional data to send with API calls.
      */
     public function __construct($_api_url, $_plugin_file, $_api_data = null)
     {
@@ -90,7 +90,7 @@ class CGD_EDD_SL_Plugin_Updater
      *
      * @uses api_request()
      *
-     * @param array $_transient_data Update array build by WordPress.
+     * @param array   $_transient_data Update array build by WordPress.
      * @return array Modified update array with custom plugin data.
      */
     public function check_update($_transient_data)
@@ -224,8 +224,8 @@ class CGD_EDD_SL_Plugin_Updater
     /**
      * Show the update notification on multisite subsites.
      *
-     * @param string $file
-     * @param array  $plugin
+     * @param string  $file
+     * @param array   $plugin
      */
     public function show_update_notification($file, $plugin)
     {
@@ -303,7 +303,7 @@ class CGD_EDD_SL_Plugin_Updater
         } elseif (empty($update_cache->response[$this->name]->package) && ! empty($changelog_link)) {
             echo ' ';
             printf(
-                /* translators: 1: opening anchor tag, do not translate 2. the new plugin version 3. closing anchor tag, do not translate. */
+                /* translators: 1. opening anchor tag, do not translate 2. the new plugin version 3. closing anchor tag, do not translate. */
                 __('%1$sView version %2$s details%3$s.', 'easy-digital-downloads'),
                 '<a target="_blank" class="thickbox open-plugin-details-modal" href="' . esc_url($changelog_link) . '">',
                 esc_html($update_cache->response[$this->name]->new_version),
@@ -351,9 +351,9 @@ class CGD_EDD_SL_Plugin_Updater
      *
      * @uses api_request()
      *
-     * @param mixed  $_data
-     * @param string $_action
-     * @param object $_args
+     * @param mixed   $_data
+     * @param string  $_action
+     * @param object  $_args
      * @return object $_data
      */
     public function plugins_api_filter($_data, $_action = '', $_args = null)
@@ -379,15 +379,15 @@ class CGD_EDD_SL_Plugin_Updater
             ),
         );
 
-        // Get the transient where we store the api request for this plugin for 24 hours.
+        // Get the transient where we store the api request for this plugin for 24 hours
         $edd_api_request_transient = $this->get_cached_version_info();
 
-        // If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
+        //If we have no transient-saved value, run the API, set a fresh transient with the API value, and return that value too right now.
         if (empty($edd_api_request_transient)) {
 
             $api_response = $this->api_request('plugin_information', $to_send);
 
-            // Expires in 3 hours.
+            // Expires in 3 hours
             $this->set_version_info_cache($api_response);
 
             if (false !== $api_response) {
@@ -456,8 +456,8 @@ class CGD_EDD_SL_Plugin_Updater
     /**
      * Disable SSL verification in order to prevent download update failures
      *
-     * @param array  $args
-     * @param string $url
+     * @param array   $args
+     * @param string  $url
      * @return object $array
      */
     public function http_request_args($args, $url)
@@ -476,8 +476,8 @@ class CGD_EDD_SL_Plugin_Updater
      * @uses wp_remote_post()
      * @uses is_wp_error()
      *
-     * @param string $_action The requested action.
-     * @param array  $_data   Parameters for the API action.
+     * @param string  $_action The requested action.
+     * @param array   $_data   Parameters for the API action.
      * @return false|object|void
      */
     private function api_request($_action, $_data)
@@ -488,7 +488,7 @@ class CGD_EDD_SL_Plugin_Updater
             return;
         }
 
-        // Don't allow a plugin to ping itself.
+        // Don't allow a plugin to ping itself
         if (trailingslashit(home_url()) === $this->api_url) {
             return false;
         }
@@ -536,7 +536,7 @@ class CGD_EDD_SL_Plugin_Updater
      * will be allowed again. This way if the site is down for some reason we don't bombard
      * it with failed API requests.
      *
-     * @see CGD_EDD_SL_Plugin_Updater::request_recently_failed
+     * @see EDD_SL_Plugin_Updater::request_recently_failed
      *
      * @since 1.9.1
      */
@@ -608,45 +608,44 @@ class CGD_EDD_SL_Plugin_Updater
          */
         $api_params = apply_filters('edd_sl_plugin_updater_api_params', $api_params, $this->api_data, $this->plugin_file);
 
-        $request = new CGD_EDD_Remote_Request(
+        $request = wp_remote_post(
             $this->api_url,
             array(
                 'timeout'   => 15,
                 'sslverify' => $this->verify_ssl(),
                 'body'      => $api_params,
-                'method'    => 'POST',
-            ),
+            )
         );
 
-        if (is_wp_error($request->response) || (200 !== $request->code)) {
+        if (is_wp_error($request) || (200 !== wp_remote_retrieve_response_code($request))) {
             $this->log_failed_request();
 
             return false;
         }
 
-        $body = json_decode($request->body);
+        $request = json_decode(wp_remote_retrieve_body($request));
 
-        if ($body && isset($body->sections)) {
-            $body->sections = maybe_unserialize($body->sections);
+        if ($request && isset($request->sections)) {
+            $request->sections = maybe_unserialize($request->sections);
         } else {
-            $body = false;
+            $request = false;
         }
 
-        if ($body && isset($body->banners)) {
-            $body->banners = maybe_unserialize($body->banners);
+        if ($request && isset($request->banners)) {
+            $request->banners = maybe_unserialize($request->banners);
         }
 
-        if ($body && isset($body->icons)) {
-            $body->icons = maybe_unserialize($body->icons);
+        if ($request && isset($request->icons)) {
+            $request->icons = maybe_unserialize($request->icons);
         }
 
-        if (! empty($body->sections)) {
-            foreach ($body->sections as $key => $section) {
-                $body->$key = (array) $section;
+        if (! empty($request->sections)) {
+            foreach ($request->sections as $key => $section) {
+                $request->$key = (array) $section;
             }
         }
 
-        return $body;
+        return $request;
     }
 
     /**
@@ -664,7 +663,7 @@ class CGD_EDD_SL_Plugin_Updater
 
         $cache = get_option($cache_key);
 
-        // Cache is expired.
+        // Cache is expired
         if (empty($cache['timeout']) || time() > $cache['timeout']) {
             return false;
         }
@@ -698,7 +697,7 @@ class CGD_EDD_SL_Plugin_Updater
 
         update_option($cache_key, $data, 'no');
 
-        // Delete the duplicate option.
+        // Delete the duplicate option
         delete_option('edd_api_request_' . md5(serialize($this->slug . $this->api_data['license'] . $this->beta)));
     }
 

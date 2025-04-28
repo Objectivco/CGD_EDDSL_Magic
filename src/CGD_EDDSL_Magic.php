@@ -1,7 +1,4 @@
 <?php
-if ( ! class_exists('CGD_EDD_Remote_Request' ) ) {
-	include dirname( __FILE__ ) . '/lib/CGD_EDD_Remote_Request.php';
-}
 
 if ( ! class_exists( 'CGD_EDD_SL_Plugin_Updater' ) ) {
 	include dirname( __FILE__ ) . '/lib/CGD_EDD_SL_Plugin_Updater.php';
